@@ -104,7 +104,7 @@ defmodule Peluquero.Rabbit do
       Channel.close(channel)
     end)
     Channel.close(state.kisser)
-    {:noreply, nil}
+    {:noreply, %State{}}
   end
 
   def handle_cast({:publish, queue, exchange, payload}, %State{} = state) do
@@ -168,8 +168,8 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   defp consume(channel, tag, redelivered, payload) do
-    # Logger.debug "[✎ rabbit.consume] #{inspect State.lookup(state, channel)}"
     try do
+      Peluquero.Actor.yo!(payload)
       Logger.debug(fn -> "[✎ rabbit.consume in #{inspect channel}] #{inspect payload}" end)
       Task.async(Basic, :ack, [channel, tag])
     rescue

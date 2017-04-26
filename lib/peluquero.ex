@@ -10,6 +10,7 @@ defmodule Peluquero do
     import Supervisor.Spec, warn: false
 
     children = [
+      worker(Peluquero.Actor, [[{IO, :inspect}]]),
       worker(Peluquero.Rabbit, [[opts: []]]),
     ]
 
@@ -23,8 +24,8 @@ defmodule Peluquero do
   @consul "configuration/macroservices/peluquero"
 
   def consul(root \\ @consul, path)
-  def consul(root, path) when is_nil(path), do: consul("")
-  def consul(root, path) when is_list(path), do: path |> Enum.join(@joiner) |> consul
+  def consul(root, path) when is_nil(path), do: consul(root, "")
+  def consul(root, path) when is_list(path), do: consul(root, Enum.join(path, @joiner))
   def consul(root, path) when is_binary(path) do
     path = [root, path]
            |> Enum.join(@joiner)
