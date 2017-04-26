@@ -55,7 +55,7 @@ defmodule Peluquero.Mixfile do
   defp package do
     [
      name: :peluquero,
-     files: ~w|bin lib mix.exs README.md|,
+     files: ~w|lib mix.exs README.md|,
      maintainers: ["Aleksei Matiushkin"],
      licenses: ["MIT"],
      links: %{"GitHub" => "https://github.com/am-kantox/peluquero",
