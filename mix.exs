@@ -46,7 +46,7 @@ defmodule Peluquero.Mixfile do
     """
     RabbitMQ middleware to plug into exchange chain to transform data.
 
-    Peluquero is reading all the configured source exchanges, passes each payload to the chain of configured transformers and publishes the result to all the configured destination exchanges.
+    Peluquero is reading all the configured source exchanges, transforms and publishes to all destination exchanges.
 
     Transformers might be added in runtime using `Peluquero.handler!/1`.
     """
