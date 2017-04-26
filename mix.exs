@@ -5,7 +5,7 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.1.1",
+      version: "0.1.2",
       elixir: "~> 1.4",
       start_permanent: Mix.env == :prod,
       description: description(),
@@ -30,7 +30,7 @@ defmodule Peluquero.Mixfile do
       {:amqp_client, "~> 3.5"},
       {:amqp, "~> 0.2"},
 
-      {:consul, git: "https://github.com/am-kantox/consul-ex.git"},
+      {:consul, "~> 1.1"},
       {:httpoison, "~> 0.9"},
       {:yaml_elixir, "~> 1.0"},
       {:json, "~> 0.3"},
@@ -48,9 +48,7 @@ defmodule Peluquero.Mixfile do
 
     Peluquero is reading all the configured source exchanges, passes each payload to the chain of configured transformers and publishes the result to all the configured destination exchanges.
 
-    The transformer might be either a function of arity 1, or a tuple of two atoms, specifying the module and the function of arity 1 within this module. Return value of transformed is used as a new payload, unless transformer returns nil. If this is a case, the payload is left intact.
-
-    Handlers might be added in runtime using Peluquero.handler!/1, that accepts any type of transformers described above. Handlers are appended to the list. Maybe later this function would accept an optional parameter, saying whether the handler should be appended, or prepended.
+    Transformers might be added in runtime using `Peluquero.handler!/1`.
     """
   end
 

@@ -2,7 +2,7 @@
   "amqp_client": {:hex, :amqp_client, "3.6.9", "076d7c68abc670d1bb44bbc357e4fba991a3ab53ce6160ec43576c653849a643", [:make, :rebar3], [{:rabbit_common, "3.6.9", [hex: :rabbit_common, optional: false]}]},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], []},
   "certifi": {:hex, :certifi, "1.1.0", "c9b71a547016c2528a590ccfc28de786c7edb74aafa17446b84f54e04efc00ee", [:rebar3], []},
-  "consul": {:git, "https://github.com/am-kantox/consul-ex.git", "c441540770b2f6841656b32588b1628955ad2ccc", []},
+  "consul": {:hex, :consul, "1.1.0", "e409bc4e4ef95456a7eb985d831ca6444ec3779b80ca29c0198a20412ea3fa1a", [:mix], [{:exjsx, "~> 3.0", [hex: :exjsx, optional: false]}, {:httpoison, "~> 0.11.0", [hex: :httpoison, optional: false]}]},
   "credo": {:hex, :credo, "0.7.3", "9827ab04002186af1aec014a811839a06f72aaae6cd5eed3919b248c8767dbf3", [:mix], [{:bunt, "~> 0.2.0", [hex: :bunt, optional: false]}]},
   "dialyxir": {:hex, :dialyxir, "0.5.0", "5bc543f9c28ecd51b99cc1a685a3c2a1a93216990347f259406a910cf048d1d7", [:mix], []},
   "earmark": {:hex, :earmark, "1.2.0", "bf1ce17aea43ab62f6943b97bd6e3dc032ce45d4f787504e3adf738e54b42f3a", [:mix], []},
