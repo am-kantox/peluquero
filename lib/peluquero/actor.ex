@@ -36,9 +36,13 @@ defmodule Peluquero.Actor do
   end
 
   def handle_cast({:yo, payload}, state) do
-    Enum.each(state, fn
-      handler when is_function(handler, 1) -> Task.async(fn -> handler.(payload) end)
-      {mod, fun} -> Task.async(mod, fun, [payload])
+    Task.async(fn ->
+      state
+      |> Enum.reduce(payload, fn
+           {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
+           handler, payload when is_function(handler, 1) -> handler.(payload) || payload
+         end)
+      |> Peluquero.Rabbit.publish!
     end)
     {:noreply, state}
   end

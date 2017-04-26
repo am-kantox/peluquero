@@ -40,12 +40,16 @@ defmodule Peluquero.Rabbit do
   @exchange "amq.fanout"
   @queue "peluquero"
 
-  @doc "Shuts the server down."
+  @doc "Shuts the server down"
   def shutdown, do: GenServer.cast(__MODULE__, :shutdown)
 
-  @doc "Publishes the payload to the queue specified."
+  @doc "Publishes the payload to the queue specified"
   def publish!(queue, exchange \\ @exchange, payload),
     do: GenServer.cast(__MODULE__, {:publish, queue, exchange, payload})
+
+  @doc "Publishes the payload to all the subscribers"
+  def publish!(payload),
+    do: GenServer.cast(__MODULE__, {:publish, payload})
 
   ##############################################################################
 
@@ -119,6 +123,15 @@ defmodule Peluquero.Rabbit do
     end
     {:noreply, state}
   end
+
+  def handle_cast({:publish, payload}, %State{} = state) when is_binary(payload) do
+    Enum.each(state.spitters, fn {channel, _queue, exchange} ->
+      Basic.publish(channel, exchange, "", payload)
+    end)
+    {:noreply, state}
+  end
+  def handle_cast({:publish, payload}, %State{} = state),
+    do: handle_cast({:publish, JSON.encode!(payload)}, state)
 
   ##############################################################################
 

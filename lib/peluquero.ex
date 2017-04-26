@@ -10,7 +10,7 @@ defmodule Peluquero do
     import Supervisor.Spec, warn: false
 
     children = [
-      worker(Peluquero.Actor, [[{IO, :inspect}]]),
+      worker(Peluquero.Actor, [[]]),
       worker(Peluquero.Rabbit, [[opts: []]]),
     ]
 

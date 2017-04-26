@@ -38,4 +38,13 @@ defmodule Peluquero.Utils do
                    end
     {(if String.contains?(rest, @joiner), do: :nested, else: :plain), type, rest}
   end
+
+  ##############################################################################
+
+  def safe(value) when is_nil(value), do: ""
+  def safe(value) when is_binary(value), do: value
+  def safe(value) when is_integer(value), do: Integer.to_string(value)
+  def safe(value) when is_float(value), do: Float.to_string(value)
+  def safe(value) when is_atom(value), do: Atom.to_string(value)
+  def safe(value), do: JSON.encode!(value)
 end
