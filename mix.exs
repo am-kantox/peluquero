@@ -23,8 +23,8 @@ defmodule Peluquero.Mixfile do
     [
       {:gen_stage, "~> 0.11"},
 
-      {:rabbit_common, "~> 3.6"},
-      {:amqp_client, "~> 3.6"},
+      {:rabbit_common, "~> 3.5"},
+      {:amqp_client, "~> 3.5"},
       {:amqp, "~> 0.2"},
       # {:exredis, "~> 0.2"},
       {:consul, git: "https://github.com/am-kantox/consul-ex.git"},

@@ -6,7 +6,7 @@ defmodule Peluquero.Test do
 
   @tag timeout: 1_000_000
   test "check rabbit connection" do
-    Process.sleep(100_000)
+    Process.sleep(1_000)
     assert 1 + 1 == 2
   end
 end
