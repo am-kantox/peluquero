@@ -14,6 +14,13 @@ defmodule Peluquero.Rabbit do
       end)
     end
 
+    def lookup(%State{} = state, exchange) when is_binary(exchange) do
+      Enum.find(state.suckers ++ state.spitters, fn
+        {_, _queue, ^exchange} -> true
+        _ -> false
+      end)
+    end
+
     def lookup(%State{} = state, pid) when is_pid(pid) do
       Enum.find(state.suckers ++ state.spitters, fn
         {%AMQP.Channel{conn: %AMQP.Connection{pid: ^pid}} = _channel, _queue, _exchange} -> true
@@ -77,7 +84,8 @@ defmodule Peluquero.Rabbit do
   def handle_info({:basic_deliver, payload, %{
       delivery_tag: tag, redelivered: redelivered, exchange: exchange} = _meta},
       %State{} = state) do
-    consume(exchange, tag, redelivered, payload)
+    with {channel, _, _} <- State.lookup(state, exchange),
+      do: consume(channel, tag, redelivered, payload)
     {:noreply, %State{} = state}
   end
 
@@ -115,7 +123,7 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   defp init_channel(conn, {exchange, settings}, sucker) do
-    exchange = Atom.to_string(exchange)
+    exchange = "#{exchange}"
     with {:ok, channel} <- Channel.open(conn),
           queue <- exchange <> "." <> (settings[:queue] || @queue) do
 
@@ -127,7 +135,7 @@ defmodule Peluquero.Rabbit do
             [channel, exchange, [durable: false]])
       Queue.bind(channel, queue, exchange, routing_key: settings[:routing_key])
       # register the `GenServer` process for consumers
-      if sucker, do: Basic.consume(channel, exchange)
+      if sucker, do: {:ok, _consumer_tag} = Basic.consume(channel, queue)
       {channel, queue, exchange}
     end
   end
@@ -162,7 +170,7 @@ defmodule Peluquero.Rabbit do
   defp consume(channel, tag, redelivered, payload) do
     # Logger.debug "[✎ rabbit.consume] #{inspect State.lookup(state, channel)}"
     try do
-      Logger.debug(fn -> "[✎ rabbit.consume] #{inspect payload}" end)
+      Logger.debug(fn -> "[✎ rabbit.consume in #{inspect channel}] #{inspect payload}" end)
       Task.async(Basic, :ack, [channel, tag])
     rescue
       exception ->
