@@ -17,11 +17,6 @@ Return value of transformed is used as a new `payload`, unless transformer retur
 `Peluquero` currently reads all the configuration values from consul. The top
 folder is specified in config and is expected to have following structure:
 
-Handlers might be added in runtime using `Peluquero.handler!/1`, that accepts
-any type of transformers described above. Handlers are _appended_ to the list.
-Maybe later this function would accept an optional parameter, saying whether
-the handler should be _appended_, or _prepended_.
-
 ```
 configuration/peluquero/
   destinations/
@@ -45,13 +40,18 @@ configuration/peluquero/
       routing_key    ⇒ to_transform
 ```
 
+Handlers might be added in runtime using `Peluquero.handler!/1`, that accepts
+any type of transformers described above. Handlers are _appended_ to the list.
+Maybe later this function would accept an optional parameter, saying whether
+the handler should be _appended_, or _prepended_.
+
 ## Installation
 
 ```elixir
 def deps do
   [
     ...
-    {:peluquero, "~> 0.1.0"},
+    {:peluquero, "~> 0.1"},
     ...
   ]
 end
