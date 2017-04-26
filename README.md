@@ -2,8 +2,8 @@
 
 **RabbitMQ middleware to plug into exchange chain to transform data**
 
-**Peluquero** _sp._, [peluˈkeɾo] — the hairstylist. This package get this names
-because what it basically does it shaving off and styling things.
+**Peluquero** _sp._, [peluˈkeɾo] — the hairstylist. This package got this name
+after what it basically does is shaving off and styling things.
 
 `Peluquero` is reading all the configured source exchanges, passes each payload
 to the chain of configured transformers and publishes the result to
