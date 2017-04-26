@@ -5,13 +5,20 @@ defmodule Peluquero do
 
   use Application
 
+  require Logger
+
+  @joiner "/"
+  @consul Application.get_env(:peluquero, :consul, "configuration/macroservices/peluquero")
+
   @doc false
-  def start(_type, _args) do
+  def start(type, args) do
     import Supervisor.Spec, warn: false
+
+    Logger.warn(fn -> "✂ Peluquero started with #{inspect {type, args}}" end)
 
     children = [
       worker(Peluquero.Actor, [[]]),
-      worker(Peluquero.Rabbit, [[opts: []]]),
+      worker(Peluquero.Rabbit, [[opts: [], consul: @consul]]),
     ]
 
     opts = [strategy: :one_for_one, name: Peluquero.Supervisor]
@@ -20,10 +27,7 @@ defmodule Peluquero do
 
   ##############################################################################
 
-  @joiner "/"
-  @consul "configuration/macroservices/peluquero"
-
-  def consul(root \\ @consul, path)
+  def consul(root, path) when is_nil(root), do: consul(@consul, path)
   def consul(root, path) when is_nil(path), do: consul(root, "")
   def consul(root, path) when is_list(path), do: consul(root, Enum.join(path, @joiner))
   def consul(root, path) when is_binary(path) do

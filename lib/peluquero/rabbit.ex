@@ -3,7 +3,7 @@ defmodule Peluquero.Rabbit do
 
   defmodule State do
     @moduledoc false
-    defstruct opts: [], suckers: [], spitters: [], kisser: nil
+    defstruct opts: [], consul: nil, suckers: [], spitters: [], kisser: nil
 
     def known?(%State{} = state, pid), do: not is_nil(lookup(state, pid))
 
@@ -55,8 +55,8 @@ defmodule Peluquero.Rabbit do
 
   def init(%State{} = state) do
     state = %State{state |
-      suckers: Keyword.merge(state.opts[:sources] || [], connection_details(:sources)),
-      spitters: Keyword.merge(state.opts[:destinations] || [], connection_details(:destinations))
+      suckers: Keyword.merge(state.opts[:sources] || [], connection_details(state.consul, :sources)),
+      spitters: Keyword.merge(state.opts[:destinations] || [], connection_details(state.consul, :destinations))
     }
     rabbit_connect(state)
   end
@@ -141,20 +141,25 @@ defmodule Peluquero.Rabbit do
           queue <- exchange <> "." <> (settings[:queue] || @queue) do
 
       # set `prefetch_count` param for consumers
-      if sucker, do: Basic.qos(channel, prefetch_count: String.to_integer(settings[:prefetch_count]) || @prefetch_count)
+      if sucker do
+        Basic.qos(channel, prefetch_count: String.to_integer(settings[:prefetch_count]) || @prefetch_count)
+      end
+
       Queue.declare(channel, queue, durable: false, auto_delete: true)
       apply(Exchange,
             (if settings[:routing_key], do: :direct, else: :fanout),
             [channel, exchange, [durable: false]])
-      Queue.bind(channel, queue, exchange, routing_key: settings[:routing_key])
-      # register the `GenServer` process for consumers
-      if sucker, do: {:ok, _consumer_tag} = Basic.consume(channel, queue)
+
+      if sucker do
+        Queue.bind(channel, queue, exchange, routing_key: settings[:routing_key])
+        {:ok, _consumer_tag} = Basic.consume(channel, queue)
+      end
       {channel, queue, exchange}
     end
   end
 
   defp rabbit_connect(%State{} = state) do
-    case Connection.open(connection_params()) do
+    case Connection.open(connection_params(state.consul)) do
       {:ok, conn} ->
         Logger.info(fn -> "☆ Rabbit: #{inspect conn}" end)
 
@@ -197,8 +202,8 @@ defmodule Peluquero.Rabbit do
 
   ##############################################################################
 
-  defp connection_params do
-    rabbit = Peluquero.consul(~w|rabbit|)
+  defp connection_params(consul) do
+    rabbit = Peluquero.consul(consul, ~w|rabbit|)
     [
       host: rabbit[:host],
       port: String.to_integer(rabbit[:port]),
@@ -207,10 +212,9 @@ defmodule Peluquero.Rabbit do
       password: rabbit[:password]
     ]
   end
-  defp connection_details(type) do
-    type
-    |> Atom.to_string
-    |> Peluquero.consul
+  defp connection_details(consul, type) do
+    consul
+    |> Peluquero.consul(Atom.to_string(type))
     |> Enum.into([])
   end
 end
