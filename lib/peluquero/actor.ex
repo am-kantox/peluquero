@@ -13,8 +13,12 @@ defmodule Peluquero.Actor do
   end
 
   @doc "Adds a handler to the handlers list"
-  def handler!(fun) when is_function(fun),
+  def handler!(fun) when is_function(fun, 1),
     do: GenServer.call(__MODULE__, {:handler, fun})
+
+  @doc "Adds a handler to the handlers list"
+  def handler!({mod, fun}) when is_atom(mod) and is_atom(fun),
+    do: GenServer.call(__MODULE__, {:handler, {mod, fun}})
 
   @doc "Adds a handler to the handlers list"
   def yo!(payload),
@@ -32,7 +36,7 @@ defmodule Peluquero.Actor do
   ##############################################################################
 
   def handle_call({:handler, fun}, _from, state) do
-    {:reply, :ok, [fun | state]}
+    {:reply, :ok, state ++ [fun]}
   end
 
   def handle_cast({:yo, payload}, state) do

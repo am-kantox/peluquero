@@ -4,8 +4,8 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.1.0",
-      elixir: "~> 1.5-dev",
+      version: "0.1.1",
+      elixir: "~> 1.4",
       start_permanent: Mix.env == :prod,
       deps: deps()
     ]
@@ -26,7 +26,7 @@ defmodule Peluquero.Mixfile do
       {:rabbit_common, "~> 3.5"},
       {:amqp_client, "~> 3.5"},
       {:amqp, "~> 0.2"},
-      # {:exredis, "~> 0.2"},
+
       {:consul, git: "https://github.com/am-kantox/consul-ex.git"},
       {:httpoison, "~> 0.9"},
       {:yaml_elixir, "~> 1.0"},

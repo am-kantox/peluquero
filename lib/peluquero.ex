@@ -30,6 +30,12 @@ defmodule Peluquero do
 
   ##############################################################################
 
+  @doc "Adds a handler to the handlers list"
+  def handler!(fun) when is_function(fun, 1) or is_tuple(fun),
+    do: Peluquero.Actor.handler!(fun)
+
+  ##############################################################################
+
   def consul(root, path) when is_nil(root), do: consul(@consul, path)
   def consul(root, path) when is_nil(path), do: consul(root, "")
   def consul(root, path) when is_list(path), do: consul(root, Enum.join(path, @joiner))
