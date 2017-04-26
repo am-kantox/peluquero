@@ -8,17 +8,20 @@ defmodule Peluquero do
   require Logger
 
   @joiner "/"
+
+  @actors Application.get_env(:peluquero, :actors, [])
+  @opts   Application.get_env(:peluquero, :opts, [])
   @consul Application.get_env(:peluquero, :consul, "configuration/macroservices/peluquero")
 
   @doc false
   def start(type, args) do
     import Supervisor.Spec, warn: false
 
-    Logger.warn(fn -> "✂ Peluquero started with #{inspect {type, args}}" end)
+    Logger.warn(fn -> "✂ Peluquero started with #{inspect {type, args}}, actors: #{inspect @actors}" end)
 
     children = [
-      worker(Peluquero.Actor, [[]]),
-      worker(Peluquero.Rabbit, [[opts: [], consul: @consul]]),
+      worker(Peluquero.Actor, [@actors]),
+      worker(Peluquero.Rabbit, [[opts: @opts, consul: @consul]]),
     ]
 
     opts = [strategy: :one_for_one, name: Peluquero.Supervisor]
