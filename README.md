@@ -39,11 +39,26 @@ configuration/peluquero/
       queue          ⇒ queue_name
       routing_key    ⇒ to_transform
 ```
+The result of the above would be:
+
+* direct exchanges `exchangeA` and `exchangeB` would be consumed with
+  `routing_key` being `to_transform`;
+* all the messages will be put to `stdout` _twice_ (one with `IO.inspect`,
+  configured in `config.exs` and another with `IO.puts`, attached in runtime);
+* all the messages will be extended with new `:timestamp` field;
+* all the messages will be published to direct `exchangeY` with `routing_key`
+  being set to `transformed` and to fanout exchange `exchangeZ`.
 
 Handlers might be added in runtime using `Peluquero.handler!/1`, that accepts
 any type of transformers described above. Handlers are _appended_ to the list.
 Maybe later this function would accept an optional parameter, saying whether
 the handler should be _appended_, or _prepended_.
+
+## Many instances
+
+`Peluquero` supports running in many different environments (like if we were
+allowed to run many instances of the same application.) When multiple environments
+are used, they should be referred by name (see `configuration`.)
 
 ## Installation
 
@@ -51,7 +66,7 @@ the handler should be _appended_, or _prepended_.
 def deps do
   [
     ...
-    {:peluquero, "~> 0.1"},
+    {:peluquero, "~> 0.2"},
     ...
   ]
 end
@@ -70,30 +85,29 @@ end
 
 **config.exs**
 ```elixir
-config :peluquero, :consul, "configuration/peluquero"
+config :peluquero, :peluquerias, [
+  p1:  [actors: [{IO, :inspect}], consul: "configuration/rabbit1"],
+  p2:  [actors: [fn msg -> msg end], consul: "configuration/rabbit2"]
+]
+```
+
+For the single rabbit one might use the simplified syntax:
+
+```elixir
+config :peluquero, :consul, "configuration/rabbit1"
 config :peluquero, :actors, [{IO, :inspect}]
 ```
 
 **my_module_1.ex**
 ```elixir
-Peluquero.handler!(&IO.puts/1) # adds another handler in runtime
-Peluquero.handler!(fn payload ->
+Peluquero.Peluqueria.handler!(:p1, &IO.puts/1) # adds another handler in runtime
+Peluquero.Peluqueria.handler!(:p2, fn payload ->
   payload
   |> JSON.decode!
   |> Map.put(:timestamp, DateTime.utc_now())
   |> JSON.encode! # if this transformer is last, it’s safe to return a term
 end) # adds another handler in runtime
 ```
-
-The result of the above would be:
-
-* direct exchanges `exchangeA` and `exchangeB` would be consumed with
-  `routing_key` being `to_transform`;
-* all the messages will be put to `stdout` _twice_ (one with `IO.inspect`,
-  configured in `config.exs` and another with `IO.puts`, attached in runtime);
-* all the messages will be extended with new `:timestamp` field;
-* all the messages will be published to direct `exchangeY` with `routing_key`
-  being set to `transformed` and to fanout exchange `exchangeZ`.
 
 ---
 
