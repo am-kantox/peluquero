@@ -3,7 +3,8 @@ defmodule Peluquero.Rabbit do
 
   defmodule State do
     @moduledoc false
-    defstruct opts: [], consul: nil, suckers: [], spitters: [], kisser: nil
+    defstruct name: nil, opts: [], consul: nil,
+              suckers: [], spitters: [], kisser: nil
 
     def known?(%State{} = state, pid), do: not is_nil(lookup(state, pid))
 
@@ -30,9 +31,12 @@ defmodule Peluquero.Rabbit do
   end
 
   use GenServer
+  use Peluquero.Namer
   use AMQP
 
   require Logger
+
+  @joiner "/"
 
   ### format is: [exchange1: [routing_key: "rates", prefetch_count: 30], exchange2: [], ...]
   # @connection_keys ~w|sources destinations|a
@@ -41,15 +45,15 @@ defmodule Peluquero.Rabbit do
   @queue "peluquero"
 
   @doc "Shuts the server down"
-  def shutdown, do: GenServer.cast(__MODULE__, :shutdown)
+  def shutdown(name), do: GenServer.cast(fqname(name), :shutdown)
 
   @doc "Publishes the payload to the queue specified"
-  def publish!(queue, exchange \\ @exchange, payload),
-    do: GenServer.cast(__MODULE__, {:publish, queue, exchange, payload})
+  def publish!(name, queue, exchange \\ @exchange, payload),
+    do: GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
 
   @doc "Publishes the payload to all the subscribers"
-  def publish!(payload),
-    do: GenServer.cast(__MODULE__, {:publish, payload})
+  def publish!(name \\ nil, payload),
+    do: GenServer.cast(fqname(name), {:publish, payload})
 
   ##############################################################################
 
@@ -62,7 +66,8 @@ defmodule Peluquero.Rabbit do
   end
 
   def start_link(opts) do
-    GenServer.start_link(__MODULE__, %State{opts: opts}, name: opts[:name] || __MODULE__)
+    state = %State{name: opts[:name], opts: opts[:opts], consul: opts[:consul]}
+    GenServer.start_link(__MODULE__, state, name: fqname(opts))
   end
 
   ##############################################################################
@@ -89,7 +94,7 @@ defmodule Peluquero.Rabbit do
       delivery_tag: tag, redelivered: redelivered, exchange: exchange} = _meta},
       %State{} = state) do
     with {channel, _, _} <- State.lookup(state, exchange),
-      do: consume(channel, tag, redelivered, payload)
+      do: consume(state.name, channel, tag, redelivered, payload)
     {:noreply, %State{} = state}
   end
 
@@ -185,25 +190,57 @@ defmodule Peluquero.Rabbit do
 
   ##############################################################################
 
-  defp consume(channel, tag, redelivered, payload) do
+  defp consume(name, channel, tag, redelivered, payload) do
     try do
-      Peluquero.Actor.yo!(payload)
-      Logger.debug(fn -> "[✎ rabbit.consume in #{inspect channel}] #{inspect payload}" end)
+      Peluquero.Actor.yo!(name, payload)
+      Logger.debug(fn -> "[✎ #{name}] rabbit.consume in #{inspect channel}] #{inspect payload}" end)
       Task.async(Basic, :ack, [channel, tag])
     rescue
       exception ->
         # Requeue unless it's a redelivered message.
         # This means we will retry consuming a message once in case of exception
         # before we give up and have it moved to the error queue
-        Logger.error "Error #{inspect exception} (while understanding #{inspect payload})"
+        Logger.error(fn -> "[⚑ #{name}] #{inspect exception} (while understanding #{inspect payload})" end)
         Basic.reject channel, tag, requeue: not redelivered
     end
   end
 
   ##############################################################################
 
+  def consul(root, path) when is_list(path),
+    do: consul(root, Enum.join(path, @joiner))
+  def consul(root, path) when is_binary(path) do
+    path = [root, path]
+           |> Enum.join(@joiner)
+           |> String.trim_trailing(@joiner)
+    size = String.length(path)
+    case Consul.Kv.keys!(path) do
+      %HTTPoison.Response{body: keys} when is_list(keys) ->
+        keys
+        |> Enum.map(fn
+          <<_ :: binary-size(size), @joiner :: binary, key :: binary>> -> key
+        end)
+        |> Enum.filter(& &1 != "")
+        |> Enum.map(fn key ->
+                      case Peluquero.Utils.consul_key_type(key) do
+                        {:nested, _, _} -> nil
+                        {:plain, :bag, rest} ->
+                          {String.to_atom(rest), consul(path, key)}
+                        {:plain, :item, _} ->
+                          with %HTTPoison.Response{body: [%{"Value" => value}]} <- Consul.Kv.fetch!("#{path}#{@joiner}#{key}"),
+                            do: {String.to_atom(key), value}
+                      end
+        end)
+        |> Enum.filter(& not is_nil(&1))
+        |> Enum.into([])
+      _ -> []
+    end
+  end
+
+  ##############################################################################
+
   defp connection_params(consul) do
-    rabbit = Peluquero.consul(consul, ~w|rabbit|)
+    rabbit = consul(consul, ~w|rabbit|)
     [
       host: rabbit[:host],
       port: String.to_integer(rabbit[:port]),
@@ -213,8 +250,6 @@ defmodule Peluquero.Rabbit do
     ]
   end
   defp connection_details(consul, type) do
-    consul
-    |> Peluquero.consul(Atom.to_string(type))
-    |> Enum.into([])
+    consul(consul, Atom.to_string(type))
   end
 end
