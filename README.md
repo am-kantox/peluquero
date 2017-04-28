@@ -106,7 +106,7 @@ Peluquero.Peluqueria.handler!(:p2, fn payload ->
   |> JSON.decode!
   |> Map.put(:timestamp, DateTime.utc_now())
   |> JSON.encode! # if this transformer is last, it’s safe to return a term
-end) # adds another handler in runtime
+end) # adds another handler in runtime, to :p2 named instance
 ```
 
 ---
