@@ -21,6 +21,7 @@ defmodule Peluquero.Namer.Test do
     assert Sample.test("a.b.c") == Sample.A.B.C
     assert Sample.test(A.B.C) == Sample.A.B.C
     assert Sample.test(Peluquero.Namer.Test, :a) == Peluquero.Namer.Test.A
+    assert Sample.test(Peluquero.Namer, Peluquero.Namer.Test) == Peluquero.Namer.Test
   after
     purge Sample
   end
