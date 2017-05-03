@@ -68,12 +68,12 @@ defmodule Peluquero.Peluqueria do
 
   # @doc "Publishes a new message to publisher specified by name"
   def publish!(name \\ nil, payload) do
-    Peluquero.Rabbit.publish!(publisher(name), {:publish, payload})
+    Peluquero.Rabbit.publish!(publisher(name), payload)
   end
 
   @doc "Publishes a new message to publisher specified by name, queue and exchange"
   def publish!(name, queue, exchange, payload) do
-    Peluquero.Rabbit.publish!(publisher(name), {:publish, queue, exchange, payload})
+    Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload)
   end
 
 end
