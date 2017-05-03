@@ -52,8 +52,9 @@ defmodule Peluquero.Rabbit do
     do: GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
 
   @doc "Publishes the payload to all the subscribers"
-  def publish!(name \\ nil, payload),
-    do: GenServer.cast(fqname(name), {:publish, payload})
+  def publish!(name \\ nil, payload) do
+    GenServer.cast(fqname(name), {:publish, payload})
+  end
 
   ##############################################################################
 
@@ -192,7 +193,7 @@ defmodule Peluquero.Rabbit do
 
   defp consume(name, channel, tag, redelivered, payload) do
     try do
-      Peluquero.Actor.yo!(name, payload)
+      Peluquero.Peluqueria.shear!(name, payload)
       Logger.debug(fn -> "[✎ #{name}] rabbit.consume in #{inspect channel}] #{inspect payload}" end)
       Task.async(Basic, :ack, [channel, tag])
     rescue

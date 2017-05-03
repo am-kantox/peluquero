@@ -12,7 +12,12 @@ defmodule Peluquero.Namer do
       def fqname(module, suffix) when is_list(suffix),
         do: fqname(module, suffix[:name])
       def fqname(module, suffix) when is_binary(suffix) do
+        to_trim = module
+                  |> Atom.to_string
+                  |> String.trim_leading("Elixir.")
+                  |> Kernel.<>(".")
         modules = suffix
+                  |> String.trim_leading(to_trim)
                   |> String.split(".")
                   |> Enum.map(&String.capitalize/1)
         Module.concat([module | modules])
