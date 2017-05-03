@@ -44,16 +44,17 @@ defmodule Peluquero.Rabbit do
   @exchange "amq.fanout"
   @queue "peluquero"
 
-  # @doc "Shuts the server down"
-  # def shutdown(name), do: GenServer.cast(fqname(name), :shutdown)
-  #
-  # @doc "Publishes the payload to the queue specified"
-  # def publish!(name, queue, exchange \\ @exchange, payload),
-  #   do: GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
-  #
-  # @doc "Publishes the payload to all the subscribers"
-  # def publish!(name \\ nil, payload),
-  #   do: GenServer.cast(fqname(name), {:publish, payload})
+  @doc "Shuts the server down"
+  def shutdown(name), do: GenServer.cast(fqname(name), :shutdown)
+
+  @doc "Publishes the payload to the queue specified"
+  def publish!(name, queue, exchange \\ @exchange, payload),
+    do: GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
+
+  @doc "Publishes the payload to all the subscribers"
+  def publish!(name \\ nil, payload) do
+    GenServer.cast(fqname(name), {:publish, payload})
+  end
 
   ##############################################################################
 
@@ -67,7 +68,7 @@ defmodule Peluquero.Rabbit do
 
   def start_link(opts) do
     state = %State{name: opts[:name], opts: opts[:opts], consul: opts[:consul]}
-    GenServer.start_link(__MODULE__, state)
+    GenServer.start_link(__MODULE__, state, name: fqname(opts))
   end
 
   ##############################################################################

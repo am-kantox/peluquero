@@ -43,8 +43,8 @@ defmodule Peluquero.Actor do
     {:reply, :ok, Keyword.update!(state, :actors, &(&1  ++ [fun]))}
   end
 
-  def handle_cast({:shear, payload}, state) do
-    Task.async(fn ->
+  def handle_call({:shear, payload}, _from, state) do
+    task = Task.async(fn ->
       Peluquero.Peluqueria.publish!(
         state[:name],
         Enum.reduce(state[:actors], payload, fn
@@ -52,6 +52,6 @@ defmodule Peluquero.Actor do
           handler, payload when is_function(handler, 1) -> handler.(payload) || payload
         end))
     end)
-    {:noreply, state}
+    {:reply, task, state}
   end
 end
