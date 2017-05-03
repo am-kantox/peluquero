@@ -29,6 +29,7 @@ defmodule Peluquero.Mixfile do
       {:rabbit_common, "~> 3.5"},
       {:amqp_client, "~> 3.5"},
       {:amqp, "~> 0.2"},
+      {:poolboy, "~> 1.5"},
 
       {:consul, "~> 1.1"},
       {:httpoison, "~> 0.9"},
