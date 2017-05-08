@@ -11,6 +11,35 @@ defmodule Peluquero.Peluqueria do
   @consul  Application.get_env(:peluquero, :consul, "configuration/macroservices/peluquero")
   @pool    Application.get_env(:peluquero, :pool, [])
 
+  defmodule Chairs do
+    @moduledoc false
+
+    use GenServer
+    use Peluquero.Namer
+
+    @doc "Adds a middleware to the middlewares list"
+    def middleware!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
+      GenServer.call(fqname(__MODULE__, name), {:middleware, fun})
+    end
+
+    @doc "Retrieves a list of middlewares"
+    def middleware?(name \\ nil) do
+      GenServer.call(fqname(__MODULE__, name), :middlewares)
+    end
+
+    ############################################################################
+
+    def start_link(opts \\ []) do
+      GenServer.start_link(__MODULE__, opts[:actors] || [], name: fqname(opts))
+    end
+
+    def handle_call(:middlewares, _from, state), do: {:reply, state, state}
+
+    def handle_call({:middleware, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
+  end
+
+  ##############################################################################
+
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts, name: fqname(opts))
   end
@@ -32,8 +61,9 @@ defmodule Peluquero.Peluqueria do
     end)
 
     children = [
-      :poolboy.child_spec(actor(opts), pool_actor,
-        [name: opts[:name], actors: opts[:actors] || @actors]) | rabbits]
+      worker(Peluquero.Peluqueria.Chairs,
+        [[name: opts[:name], actors: opts[:actors] || @actors]]) |
+      [:poolboy.child_spec(actor(opts), pool_actor, [name: opts[:name]]) | rabbits]]
 
     supervise(children, strategy: :one_for_one)
   end
@@ -50,11 +80,9 @@ defmodule Peluquero.Peluqueria do
 
   ##############################################################################
 
-  @doc "Adds a handler to the handlers list"
-  def handler!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
-    :poolboy.transaction(actor(name),
-      fn(pid) -> GenServer.call(pid, {:handler, fun}) end
-    )
+  @doc "Adds a middleware to the middlewares list"
+  def middleware!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
+    Peluquero.Peluqueria.Chairs.middleware!(name, fun)
   end
 
   @doc "Adds a handler to the handlers list"
