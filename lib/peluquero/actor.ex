@@ -43,7 +43,7 @@ defmodule Peluquero.Actor do
     task = Task.async(fn ->
       Peluquero.Peluqueria.publish!(
         state[:name],
-        Enum.reduce(Peluquero.Peluqueria.Chairs.middleware?(state[:name]), payload, fn
+        Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
           {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
           handler, payload when is_function(handler, 1) -> handler.(payload) || payload
         end))

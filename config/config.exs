@@ -29,6 +29,6 @@ config :logger, level: :info # :debug
 #     import_config "#{Mix.env}.exs"
 
 config :peluquero, :peluquerias, [
-  p1:  [actors: [], rabbits: 1, pool: [actors: [size: 50, max_overflow: 100]]],
-  p2:  [actors: [], rabbits: 1]
+  p1:  [scissors: [], rabbits: 1, pool: [actors: [size: 50, max_overflow: 100]]],
+  p2:  [scissors: [], rabbits: 1]
 ]

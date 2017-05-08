@@ -86,8 +86,8 @@ end
 **config.exs**
 ```elixir
 config :peluquero, :peluquerias, [
-  p1:  [actors: [{IO, :inspect}], consul: "configuration/rabbit1"],
-  p2:  [actors: [fn msg -> msg end], consul: "configuration/rabbit2"]
+  p1:  [scissors: [{IO, :inspect}], consul: "configuration/rabbit1"],
+  p2:  [scissors: [fn msg -> msg end], consul: "configuration/rabbit2"]
 ]
 ```
 
@@ -95,13 +95,13 @@ For the single rabbit one might use the simplified syntax:
 
 ```elixir
 config :peluquero, :consul, "configuration/rabbit1"
-config :peluquero, :actors, [{IO, :inspect}]
+config :peluquero, :scissors, [{IO, :inspect}]
 ```
 
 **my_module_1.ex**
 ```elixir
-Peluquero.Peluqueria.handler!(:p1, &IO.puts/1) # adds another handler in runtime
-Peluquero.Peluqueria.handler!(:p2, fn payload ->
+Peluquero.Peluqueria.scissors!(:p1, &IO.puts/1) # adds another handler in runtime
+Peluquero.Peluqueria.scissors!(:p2, fn payload ->
   payload
   |> JSON.decode!
   |> Map.put(:timestamp, DateTime.utc_now())
