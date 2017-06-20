@@ -3,7 +3,7 @@ defmodule Peluquero.Rabbit do
 
   defmodule State do
     @moduledoc false
-    defstruct name: nil, opts: [], consul: nil,
+    defstruct name: nil, opts: [], consul: nil, rabbit: nil,
               suckers: [], spitters: [], kisser: nil
 
     def known?(%State{} = state, pid), do: not is_nil(lookup(state, pid))
@@ -67,7 +67,7 @@ defmodule Peluquero.Rabbit do
   end
 
   def start_link(opts) do
-    state = %State{name: opts[:name], opts: opts[:opts], consul: opts[:consul]}
+    state = %State{name: opts[:name], opts: opts[:opts], consul: opts[:consul], rabbit: opts[:rabbit]}
     GenServer.start_link(__MODULE__, state, name: fqname(opts))
   end
 
@@ -165,7 +165,7 @@ defmodule Peluquero.Rabbit do
   end
 
   defp rabbit_connect(%State{} = state) do
-    case Connection.open(connection_params(state.consul)) do
+    case Connection.open(connection_params(state)) do
       {:ok, conn} ->
         Logger.info(fn -> "☆ Rabbit: #{inspect conn}" end)
 
@@ -240,7 +240,8 @@ defmodule Peluquero.Rabbit do
 
   ##############################################################################
 
-  defp connection_params(consul) do
+  defp connection_params(%State{rabbit: rabbit}) when not is_nil(rabbit), do: rabbit
+  defp connection_params(%State{consul: consul}) when not is_nil(consul) do
     rabbit = consul(consul, ~w|rabbit|)
     [
       host: rabbit[:host],
@@ -250,6 +251,11 @@ defmodule Peluquero.Rabbit do
       password: rabbit[:password]
     ]
   end
+  defp connection_params(_) do
+    raise "Either consul or rabbit must be set in config.exs"
+  end
+
+  defp connection_details(nil, _), do: []
   defp connection_details(consul, type) do
     consul(consul, Atom.to_string(type))
   end

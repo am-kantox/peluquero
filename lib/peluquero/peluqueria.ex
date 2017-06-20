@@ -8,7 +8,8 @@ defmodule Peluquero.Peluqueria do
   @scissors Application.get_env(:peluquero, :scissors, [])
   @rabbits  Application.get_env(:peluquero, :rabbits, 1)
   @opts     Application.get_env(:peluquero, :opts, [])
-  @consul   Application.get_env(:peluquero, :consul, "configuration/macroservices/peluquero")
+  @consul   Application.get_env(:peluquero, :consul, nil)
+  @rabbit   Application.get_env(:peluquero, :rabbit, nil)
   @pool     Application.get_env(:peluquero, :pool, [])
 
   defmodule Chairs do
@@ -56,7 +57,10 @@ defmodule Peluquero.Peluqueria do
 
     rabbits = Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
       worker(Peluquero.Rabbit,
-        [[name: opts[:name], opts: opts[:opts] || @opts, consul: opts[:consul] || @consul]],
+        [[name: opts[:name],
+          opts: opts[:opts] || @opts,
+          consul: opts[:consul] || @consul,
+          rabbit: opts[:rabbit] || @rabbit]],
         id: Module.concat(fqname(Peluquero.Rabbit, opts), "Worker#{idx}"))
     end)
 

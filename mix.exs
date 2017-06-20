@@ -5,7 +5,7 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.3.3",
+      version: "0.4.0",
       elixir: "~> 1.4",
       start_permanent: Mix.env == :prod,
       description: description(),
@@ -34,7 +34,7 @@ defmodule Peluquero.Mixfile do
       {:consul, "~> 1.1"},
       {:httpoison, "~> 0.9"},
       {:yaml_elixir, "~> 1.0"},
-      {:json, "~> 0.3"},
+      {:json, "~> 1.0"},
 
       {:credo, "~> 0.7", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},

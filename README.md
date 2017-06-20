@@ -54,6 +54,12 @@ any type of transformers described above. Handlers are _appended_ to the list.
 Maybe later this function would accept an optional parameter, saying whether
 the handler should be _appended_, or _prepended_.
 
+### Simplified settings with explicit `rabbit` config key
+
+Starting with `0.4.0` we allow [though not recommend] an explicit settings
+of `RabbitMQ` parameters directly in `confix.exs` file. See [`Usage`](#Usage) section
+below for details.
+
 ## Many instances
 
 `Peluquero` supports running in many different environments (like if we were
@@ -66,7 +72,7 @@ are used, they should be referred by name (see `configuration`.)
 def deps do
   [
     ...
-    {:peluquero, "~> 0.2"},
+    {:peluquero, "~> 0.4"},
     ...
   ]
 end
@@ -87,7 +93,14 @@ end
 ```elixir
 config :peluquero, :peluquerias, [
   p1:  [scissors: [{IO, :inspect}], consul: "configuration/rabbit1"],
-  p2:  [scissors: [fn msg -> msg end], consul: "configuration/rabbit2"]
+  p2:  [scissors: [fn msg -> msg end],
+        rabbit: [
+          host: "localhost",
+          password: "guest",
+          port: 5672,
+          username: "guest",
+          virtual_host: "/",
+          x_message_ttl: "4000"]]
 ]
 ```
 
@@ -108,6 +121,12 @@ Peluquero.Peluqueria.scissors!(:p2, fn payload ->
   |> JSON.encode! # if this transformer is last, it’s safe to return a term
 end) # adds another handler in runtime, to :p2 named instance
 ```
+
+## Changelog
+
+### `0.4.0`
+
+- allow explicit `RabbitMQ` settings in config (no consul needed.)
 
 ---
 
