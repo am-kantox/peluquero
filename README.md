@@ -57,7 +57,7 @@ the handler should be _appended_, or _prepended_.
 ### Simplified settings with explicit `rabbit` config key
 
 Starting with `0.4.0` we allow [though not recommend] an explicit settings
-of `RabbitMQ` parameters directly in `confix.exs` file. See [`Usage`](#Usage) section
+of `RabbitMQ` parameters directly in `confix.exs` file. See [`Usage`](#usage) section
 below for details.
 
 ## Many instances
