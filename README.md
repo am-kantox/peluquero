@@ -18,7 +18,7 @@ Return value of transformed is used as a new `payload`, unless transformer retur
 folder is specified in config and is expected to have following structure:
 
 ```
-configuration/peluquero/
+configuration/macroservices/peluquero/
   destinations/
     exchangeY/
       routing_key    ⇒ transformed
