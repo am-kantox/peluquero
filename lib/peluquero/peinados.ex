@@ -29,19 +29,28 @@ defmodule Peluquero.Peinados do
 
   ##############################################################################
 
-  defp publisher(nil), do: Peluquero.Redis
-  defp publisher(opts) when is_list(opts), do: fqname(Peluquero.Redis, opts[:name])
-  defp publisher(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Redis, name)
-
-  ##############################################################################
+  # @doc "Sets a new value for the key in the redis, specified by name"
+  def get(name \\ nil, key) do
+    case Peluquero.Redis.get(publisher(name), key) do
+      :undefined -> nil
+      whatever -> whatever
+    end
+  end
 
   # @doc "Retrieves the value by key from the redis, specified by name"
   def set(name \\ nil, key, value) do
     Peluquero.Redis.set(publisher(name), key, value)
   end
 
-  # @doc "Sets a new value for the key in the redis, specified by name"
-  def get(name \\ nil, key) do
-    Peluquero.Redis.get(publisher(name), key)
+  # @doc "Deletes the value by key from the redis, specified by name"
+  def del(name \\ nil, key) do
+    Peluquero.Redis.del(publisher(name), key)
   end
+
+  ##############################################################################
+
+  defp publisher(nil), do: Peluquero.Redis
+  defp publisher(opts) when is_list(opts), do: fqname(Peluquero.Redis, opts[:name])
+  defp publisher(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Redis, name)
+
 end

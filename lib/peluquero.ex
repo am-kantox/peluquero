@@ -32,4 +32,5 @@ defmodule Peluquero do
     opts = [strategy: :one_for_one, name: fqname(Peluquero.Supervisor, args)]
     Supervisor.start_link([redises | amqps], opts)
   end
+
 end

@@ -12,6 +12,7 @@ defmodule Peluquero.Redis do
 
   def get(name, key), do: GenServer.call(fqname(name), {:get, key})
   def set(name, key, value), do: GenServer.cast(fqname(name), {:set, key, value})
+  def del(name, key), do: GenServer.cast(fqname(name), {:del, key})
 
   ##############################################################################
 
@@ -23,7 +24,7 @@ defmodule Peluquero.Redis do
 
   def handle_info({:DOWN, _, :process, _pid, reason}, state) do
     Logger.log :info, "⇑ reconnecting after ⇓ for #{inspect reason} reason"
-    {:noreply, Keyword.merge(state, redis: redis_connect(state[:name], state[:consul])) }
+    {:noreply, Keyword.merge(state, redis: redis_connect(state[:name], state[:consul]))}
   end
 
   def handle_cast(:shutdown, state) do
@@ -32,13 +33,18 @@ defmodule Peluquero.Redis do
     {:noreply, nil}
   end
 
+  def handle_call({:get, key}, _from, state) do
+    {:reply, Exredis.query(state[:redis], ["GET", key]), state}
+  end
+
   def handle_cast({:set, key, value}, state) do
     Exredis.query(state[:redis], ["SET", key, value])
     {:noreply, state}
   end
 
-  def handle_call({:get, key}, _from, state) do
-    {:reply, Exredis.query(state[:redis], ["GET", key]), state}
+  def handle_cast({:del, key}, state) do
+    Exredis.query(state[:redis], ["DEL", key])
+    {:noreply, state}
   end
 
   ##############################################################################
@@ -46,7 +52,9 @@ defmodule Peluquero.Redis do
   defp redis_connect(name, consul) do
     conn_params = connection_params(consul, name)
     case Exredis.start_link(conn_params) do
-      {:ok, client} -> client
+      {:ok, client} -> 
+        Logger.log :warn, ~s|★ Redis: [name: :#{name}, consul: "#{consul}", redis: #{inspect client}]|
+        client
 
       {:error, reason} ->
         # Reconnection loop
