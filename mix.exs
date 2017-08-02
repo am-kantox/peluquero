@@ -5,7 +5,7 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.4.0",
+      version: "0.5.0",
       elixir: "~> 1.4",
       start_permanent: Mix.env == :prod,
       description: description(),
@@ -29,6 +29,7 @@ defmodule Peluquero.Mixfile do
       {:rabbit_common, "~> 3.5"},
       {:amqp_client, "~> 3.5"},
       {:amqp, "~> 0.2"},
+      {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
 
       {:consul, "~> 1.1"},

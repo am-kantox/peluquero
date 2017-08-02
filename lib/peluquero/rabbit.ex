@@ -36,7 +36,7 @@ defmodule Peluquero.Rabbit do
 
   require Logger
 
-  @joiner "/"
+  # @joiner "/"
 
   ### format is: [exchange1: [routing_key: "rates", prefetch_count: 30], exchange2: [], ...]
   # @connection_keys ~w|sources destinations|a
@@ -183,7 +183,7 @@ defmodule Peluquero.Rabbit do
         {:ok, state}
 
       {:error, reason} ->
-        Logger.warn(fn -> "⚐ Rabbit error, reason: #{inspect reason}" end)
+        Logger.warn(fn -> "⚐ Rabbit error, reason: #{inspect reason}, state: #{inspect state}" end)
         Process.sleep(1000)
         rabbit_connect(state)
     end
@@ -208,41 +208,9 @@ defmodule Peluquero.Rabbit do
 
   ##############################################################################
 
-  def consul(root, path) when is_list(path),
-    do: consul(root, Enum.join(path, @joiner))
-  def consul(root, path) when is_binary(path) do
-    path = [root, path]
-           |> Enum.join(@joiner)
-           |> String.trim_trailing(@joiner)
-    size = String.length(path)
-    case Consul.Kv.keys!(path) do
-      %HTTPoison.Response{body: keys} when is_list(keys) ->
-        keys
-        |> Enum.map(fn
-          <<_ :: binary-size(size), @joiner :: binary, key :: binary>> -> key
-        end)
-        |> Enum.filter(& &1 != "")
-        |> Enum.map(fn key ->
-                      case Peluquero.Utils.consul_key_type(key) do
-                        {:nested, _, _} -> nil
-                        {:plain, :bag, rest} ->
-                          {String.to_atom(rest), consul(path, key)}
-                        {:plain, :item, _} ->
-                          with %HTTPoison.Response{body: [%{"Value" => value}]} <- Consul.Kv.fetch!("#{path}#{@joiner}#{key}"),
-                            do: {String.to_atom(key), value}
-                      end
-        end)
-        |> Enum.filter(& not is_nil(&1))
-        |> Enum.into([])
-      _ -> []
-    end
-  end
-
-  ##############################################################################
-
   defp connection_params(%State{rabbit: rabbit}) when not is_nil(rabbit), do: rabbit
   defp connection_params(%State{consul: consul}) when not is_nil(consul) do
-    rabbit = consul(consul, ~w|rabbit|)
+    rabbit = Peluquero.Utils.consul(consul, ~w|rabbit|)
     [
       host: rabbit[:host],
       port: String.to_integer(rabbit[:port]),
@@ -257,6 +225,6 @@ defmodule Peluquero.Rabbit do
 
   defp connection_details(nil, _), do: []
   defp connection_details(consul, type) do
-    consul(consul, Atom.to_string(type))
+    Peluquero.Utils.consul(consul, Atom.to_string(type))
   end
 end

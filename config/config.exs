@@ -43,3 +43,7 @@ config :peluquero, :peluquerias, [
           virtual_host: "/",
           x_message_ttl: "4000"]]
 ]
+
+config :peluquero, :peinados, [
+  eventory: [consul: "configuration/erniecluster/redis"]
+]

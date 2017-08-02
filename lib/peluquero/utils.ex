@@ -47,4 +47,39 @@ defmodule Peluquero.Utils do
   def safe(value) when is_float(value), do: Float.to_string(value)
   def safe(value) when is_atom(value), do: Atom.to_string(value)
   def safe(value), do: JSON.encode!(value)
+
+  ##############################################################################
+
+  def consul(root, path) when is_list(path),
+    do: consul(root, Enum.join(path, @joiner))
+  def consul(root, path) when is_atom(path),
+    do: consul(root, Atom.to_string(path))
+  def consul(root, path) when is_binary(path) do
+    path = [root, path]
+           |> Enum.join(@joiner)
+           |> String.trim_trailing(@joiner)
+    size = String.length(path)
+
+    case Consul.Kv.keys!(path) do
+      %HTTPoison.Response{body: keys} when is_list(keys) ->
+        keys
+        |> Enum.map(fn
+          <<_ :: binary-size(size), @joiner :: binary, key :: binary>> -> key
+        end)
+        |> Enum.filter(& &1 != "")
+        |> Enum.map(fn key ->
+                      case Peluquero.Utils.consul_key_type(key) do
+                        {:nested, _, _} -> nil
+                        {:plain, :bag, rest} ->
+                          {String.to_atom(rest), consul(path, key)}
+                        {:plain, :item, _} ->
+                          with %HTTPoison.Response{body: [%{"Value" => value}]} <- Consul.Kv.fetch!("#{path}#{@joiner}#{key}"),
+                            do: {String.to_atom(key), value}
+                      end
+        end)
+        |> Enum.filter(& not is_nil(&1))
+        |> Enum.into([])
+      _ -> []
+    end
+  end
 end
