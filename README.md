@@ -38,6 +38,11 @@ configuration/macroservices/peluquero/
       prefetch_count ⇒ 50
       queue          ⇒ queue_name
       routing_key    ⇒ to_transform
+  redis/
+    host             ⇒ localhost
+    port             ⇒ 11887
+    database         ⇒ 0
+    pwd              ⇒ my_redis_password
 ```
 The result of the above would be:
 
@@ -53,6 +58,11 @@ Handlers might be added in runtime using `Peluquero.handler!/1`, that accepts
 any type of transformers described above. Handlers are _appended_ to the list.
 Maybe later this function would accept an optional parameter, saying whether
 the handler should be _appended_, or _prepended_.
+
+Also, `Peluquero` simplifies the `Redis` access: all the connection boilerplate
+is handler by `Peluquero`, allowing storing a `Redis` values based on streaming
+queue (e.g. “current value”) as easy as declaring one `scissors` delegating to
+`Peluquero.Peinados.set/3`.
 
 ### Simplified settings with explicit `rabbit` config key
 
@@ -72,7 +82,7 @@ are used, they should be referred by name (see `configuration`.)
 def deps do
   [
     ...
-    {:peluquero, "~> 0.4"},
+    {:peluquero, "~> 0.5"},
     ...
   ]
 end
@@ -102,6 +112,13 @@ config :peluquero, :peluquerias, [
           virtual_host: "/",
           x_message_ttl: "4000"]]
 ]
+
+# optional
+config :peluquero, :peinados, [
+  # params are under "configurarion/macroservices/peluquero/redis" key, see above
+  redis: [consul: "configuration/macroservices/peluquero"]
+]
+
 ```
 
 For the single rabbit one might use the simplified syntax:
@@ -124,12 +141,28 @@ end) # adds another handler in runtime, to :p2 named instance
 
 ## Changelog
 
+### `0.5.0`
+
+- transparent Redis support (no boilerplate, auto reconnects):
+
+```elixir
+defmodule RedisAgent do
+  use GenServer
+  @peinado :redis
+
+  def start_link(_opts) do
+    GenServer.start_link(fn -> %{} end, name: __MODULE__)
+  end
+
+  def get(key), do: Peluquero.Peinados.get(@peinado, key)
+  def put(key, value), do: Peluquero.Peinados.set(@peinado, key, value)
+end
+```
+
 ### `0.4.0`
 
 - allow explicit `RabbitMQ` settings in config (no consul needed.)
 
 ---
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/peluquero](https://hexdocs.pm/peluquero).
+Documentation can be found at [https://hexdocs.pm/peluquero](https://hexdocs.pm/peluquero).
