@@ -40,7 +40,9 @@ defmodule Peluquero.Rabbit do
 
   ### format is: [exchange1: [routing_key: "rates", prefetch_count: 30], exchange2: [], ...]
   # @connection_keys ~w|sources destinations|a
-  @prefetch_count 50
+  @prefetch_count "50"
+  @durable false
+  @auto_delete true
   @exchange "amq.fanout"
   @queue "peluquero"
 
@@ -143,21 +145,26 @@ defmodule Peluquero.Rabbit do
 
   defp init_channel(conn, {exchange, settings}, sucker) do
     exchange = "#{exchange}"
+    durable = settings[:durable] == "true" || @durable
+    auto_delete = settings[:auto_delete] == "true" || @auto_delete
+    prefetch_count = String.to_integer(settings[:prefetch_count] || @prefetch_count)
+    {direct_or_fanout, queue_params} = if settings[:routing_key] do
+      {:direct, [routing_key: settings[:routing_key]]}
+    else
+      {:fanout, []}
+    end
+
     with {:ok, channel} <- Channel.open(conn),
-          queue <- exchange <> "." <> (settings[:queue] || @queue) do
+          queue <- settings[:queue] || exchange <> "." <> @queue do
 
       # set `prefetch_count` param for consumers
-      if sucker do
-        Basic.qos(channel, prefetch_count: String.to_integer(settings[:prefetch_count]) || @prefetch_count)
-      end
+      if sucker, do: Basic.qos(channel, prefetch_count: prefetch_count)
 
-      Queue.declare(channel, queue, durable: false, auto_delete: true)
-      apply(Exchange,
-            (if settings[:routing_key], do: :direct, else: :fanout),
-            [channel, exchange, [durable: false]])
+      Queue.declare(channel, queue, durable: @durable, auto_delete: auto_delete)
+      apply(Exchange, direct_or_fanout, [channel, exchange, [durable: durable]])
 
       if sucker do
-        Queue.bind(channel, queue, exchange, routing_key: settings[:routing_key])
+        Queue.bind(channel, queue, exchange, queue_params)
         {:ok, _consumer_tag} = Basic.consume(channel, queue)
       end
       {channel, queue, exchange}

@@ -42,6 +42,8 @@ defmodule Peluquero.Utils do
   ##############################################################################
 
   def safe(value) when is_nil(value), do: ""
+  def safe(false), do: "false"
+  def safe(true), do: "true"
   def safe(value) when is_binary(value), do: value
   def safe(value) when is_integer(value), do: Integer.to_string(value)
   def safe(value) when is_float(value), do: Float.to_string(value)
