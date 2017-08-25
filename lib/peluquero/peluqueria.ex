@@ -107,5 +107,4 @@ defmodule Peluquero.Peluqueria do
   def publish!(name, queue, exchange, payload) do
     Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload)
   end
-
 end
