@@ -61,6 +61,17 @@ defmodule Peluquero do
       database         ⇒ 0
       pwd              ⇒ my_redis_password
   ```
+  **my_module_1.ex**
+  ```elixir
+  Peluquero.Peluqueria.scissors!(:p1, &IO.puts/1) # adds another handler in runtime
+  Peluquero.Peluqueria.scissors!(:p2, fn payload ->
+    payload
+    |> JSON.decode!
+    |> Map.put(:timestamp, DateTime.utc_now())
+    |> JSON.encode! # if this transformer is last, it’s safe to return a term
+  end) # adds another handler in runtime, to :p2 named instance
+  ```
+
   The result of the above would be:
 
   * direct exchanges `exchangeA` and `exchangeB` would be consumed with
@@ -89,27 +100,35 @@ defmodule Peluquero do
 
   @doc false
   def start(_type, args) do
-    import Supervisor.Spec, warn: false
-
     peluquerias = Application.get_env(:peluquero, :peluquerias, [])
     peinados = Application.get_env(:peluquero, :peinados, [])
 
     Logger.warn(fn -> "✂ Peluquero started:\n  — peluquerias: #{inspect peluquerias}.\n  — peinados: #{inspect peinados}.\n  — args: #{inspect args}.\n" end)
 
-    amqps = case Enum.map(peluquerias, fn {name, settings} ->
-              supervisor(Peluquero.Peluqueria,
-                          [Keyword.merge(settings, name: name)],
-                          id: fqname(Peluquero.Peluqueria, name))
-            end) do
-              [] -> [supervisor(Peluquero.Peluqueria, [])]
+    amqps = case Enum.map(peluquerias, &spec_for_peluqueria/1) do
+              [] -> [{Peluquero.Peluqueria, []}]
               many -> many
             end
-
-    redises = supervisor(Peluquero.Peinados, [peinados],
-                          id: fqname(Peluquero.Peinados, "Procurator"))
+    redises = spec_for_peinado({"Procurator", peinados})
 
     opts = [strategy: :one_for_one, name: fqname(Peluquero.Supervisor, args)]
     Supervisor.start_link([redises | amqps], opts)
+  end
+
+  ##############################################################################
+
+  defp spec_for_peluqueria({name, settings}) do
+    %{id: fqname(Peluquero.Peluqueria, name),
+      start: {Peluquero.Peluqueria, :start_link, [Keyword.merge(settings, name: name)]},
+      restart: :permanent,
+      type: :supervisor}
+  end
+
+  defp spec_for_peinado({name, peinados}) do
+    %{id: fqname(Peluquero.Peinados, name),
+      start: {Peluquero.Peinados, :start_link, [peinados]},
+      restart: :permanent,
+      type: :supervisor}
   end
 
 end

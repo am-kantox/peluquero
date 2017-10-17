@@ -12,4 +12,7 @@ config :peluquero, :peluquerias, [
             x_message_ttl: "4000"]]
 ]
 
+# With mix test --include local_only
+# change the value in the line below to:
+#   [eventory: [consul: "configuration/erniecluster/redis"]]
 config :peluquero, :peinados, []
