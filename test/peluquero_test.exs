@@ -10,6 +10,7 @@ defmodule Peluquero.Test do
     assert 1 + 1 == 2
   end
 
+  @tag :local_only
   test "redis peinado works" do
     assert is_nil(Peluquero.Peinados.get(:eventory, "test_test_test_test"))
     assert Peluquero.Peinados.set(:eventory, "test_test_test_test", 42) == :ok

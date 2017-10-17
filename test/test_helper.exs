@@ -14,4 +14,5 @@ defmodule Peluquero.Tester do
   end
 end
 
-ExUnit.start()
+ExUnit.start(exclude: :local_only)
+

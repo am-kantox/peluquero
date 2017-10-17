@@ -1,6 +1,6 @@
 # Peluquero
 
-**RabbitMQ middleware to plug into exchange chain to transform data**
+[![Build Status](https://travis-ci.org/am-kantox/peluquero.svg?branch=master)](https://travis-ci.org/am-kantox/peluquero)   **RabbitMQ middleware to plug into exchange chain to transform data**
 
 **Peluquero** _sp._, [peluˈkeɾo] — the hairstylist. This package got this name
 after what it basically does is shaving off and styling things.
