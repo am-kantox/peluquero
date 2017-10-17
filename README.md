@@ -17,6 +17,7 @@ Return value of transformed is used as a new `payload`, unless transformer retur
 `Peluquero` currently reads all the configuration values from consul. The top
 folder is specified in config and is expected to have following structure:
 
+**consul configuration**
 ```
 configuration/macroservices/peluquero/
   destinations/
@@ -44,6 +45,18 @@ configuration/macroservices/peluquero/
     database         ⇒ 0
     pwd              ⇒ my_redis_password
 ```
+
+**my_module_1.ex**
+```elixir
+Peluquero.Peluqueria.scissors!(:p1, &IO.puts/1) # adds another handler in runtime
+Peluquero.Peluqueria.scissors!(:p2, fn payload ->
+  payload
+  |> JSON.decode!
+  |> Map.put(:timestamp, DateTime.utc_now())
+  |> JSON.encode! # if this transformer is last, it’s safe to return a term
+end) # adds another handler in runtime, to :p2 named instance
+```
+
 The result of the above would be:
 
 * direct exchanges `exchangeA` and `exchangeB` would be consumed with
@@ -70,12 +83,6 @@ Starting with `0.4.0` we allow [though not recommend] an explicit settings
 of `RabbitMQ` parameters directly in `confix.exs` file. See [`Usage`](#usage) section
 below for details.
 
-## Many instances
-
-`Peluquero` supports running in many different environments (like if we were
-allowed to run many instances of the same application.) When multiple environments
-are used, they should be referred by name (see `configuration`.)
-
 ## Installation
 
 ```elixir
@@ -98,6 +105,10 @@ end
 ```
 
 ## Usage
+
+`Peluquero` supports running in many different environments (like if we were
+allowed to run many instances of the same application.) When multiple environments
+are used, they should be referred by name (see `configuration`.)
 
 **config.exs**
 ```elixir
@@ -126,17 +137,6 @@ For the single rabbit one might use the simplified syntax:
 ```elixir
 config :peluquero, :consul, "configuration/rabbit1"
 config :peluquero, :scissors, [{IO, :inspect}]
-```
-
-**my_module_1.ex**
-```elixir
-Peluquero.Peluqueria.scissors!(:p1, &IO.puts/1) # adds another handler in runtime
-Peluquero.Peluqueria.scissors!(:p2, fn payload ->
-  payload
-  |> JSON.decode!
-  |> Map.put(:timestamp, DateTime.utc_now())
-  |> JSON.encode! # if this transformer is last, it’s safe to return a term
-end) # adds another handler in runtime, to :p2 named instance
 ```
 
 ## Changelog
