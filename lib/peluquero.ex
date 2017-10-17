@@ -3,7 +3,7 @@ defmodule Peluquero do
   Application handler for the `Peluquero` application.
 
   `Peluquero` is the multi-purpose, multi-protocol message handling utility.
-  It provides the transparent way to subscribe to rabbit queues, re-shape the 
+  It provides the transparent way to subscribe to rabbit queues, re-shape the
   messages and spit out everything to other queues. It also supports transparent
   redis connection for those who need to store the data in redis.
 
