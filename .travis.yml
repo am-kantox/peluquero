@@ -3,7 +3,6 @@ before_install:
   - sudo apt-get install -qq rabbitmq-server
 language: elixir
 elixir:
-  - 1.4.5
   - 1.5.0
 after_script:
   - MIX_ENV=docs mix deps.get
