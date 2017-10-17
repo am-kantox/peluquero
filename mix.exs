@@ -5,7 +5,7 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.5.3",
+      version: "0.6.0",
       elixir: "~> 1.4",
       start_permanent: Mix.env == :prod,
       description: description(),
