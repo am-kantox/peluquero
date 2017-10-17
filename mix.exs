@@ -40,7 +40,7 @@ defmodule Peluquero.Mixfile do
       {:credo, "~> 0.7", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev},
-      {:mock, "~> 0.2", only: :test}
+      {:mock, "~> 0.3", only: :test}
     ]
   end
 

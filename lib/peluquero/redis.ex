@@ -33,10 +33,6 @@ defmodule Peluquero.Redis do
     {:noreply, nil}
   end
 
-  def handle_call({:get, key}, _from, state) do
-    {:reply, Exredis.query(state[:redis], ["GET", key]), state}
-  end
-
   def handle_cast({:set, key, value}, state) do
     Exredis.query(state[:redis], ["SET", key, value])
     {:noreply, state}
@@ -47,12 +43,16 @@ defmodule Peluquero.Redis do
     {:noreply, state}
   end
 
+  def handle_call({:get, key}, _from, state) do
+    {:reply, Exredis.query(state[:redis], ["GET", key]), state}
+  end
+
   ##############################################################################
 
   defp redis_connect(name, consul) do
     conn_params = connection_params(consul, name)
     case Exredis.start_link(conn_params) do
-      {:ok, client} -> 
+      {:ok, client} ->
         Logger.log :warn, ~s|★ Redis: [name: :#{name}, consul: "#{consul}", redis: #{inspect client}]|
         client
 
