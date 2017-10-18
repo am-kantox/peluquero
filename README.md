@@ -141,6 +141,11 @@ config :peluquero, :scissors, [{IO, :inspect}]
 
 ## Changelog
 
+### `0.6.0`
+
+- **BREAKING** removed a deprecated `Supervisor.Spec` and dropped support for Elixir < 1.5
+- cleanups, readmes, docs
+
 ### `0.5.0`
 
 - transparent Redis support (no boilerplate, auto reconnects):
