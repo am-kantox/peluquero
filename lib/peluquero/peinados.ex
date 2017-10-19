@@ -5,7 +5,7 @@ defmodule Peluquero.Peinados do
   use Supervisor
   use Peluquero.Namer
 
-  @consul   Application.get_env(:peinado, :consul, nil)
+  @consul Application.get_env(:peinado, :consul, nil)
 
   def start_link(peinados \\ []) do
     Supervisor.start_link(__MODULE__, peinados, name: __MODULE__)
@@ -60,8 +60,10 @@ defmodule Peluquero.Peinados do
     active > 0
   end
 
+  require Peluquero.Utils
+
   @doc "Retrieves the value by key from the redis, specified by name"
-  def get(name \\ nil, key) do
+  Peluquero.Utils.safe_method :get, name, key do
     case Peluquero.Redis.get(publisher(name), key) do
       :undefined -> nil
       whatever -> whatever
@@ -69,12 +71,12 @@ defmodule Peluquero.Peinados do
   end
 
   @doc "Sets a new value for the key in the redis, specified by name"
-  def set(name \\ nil, key, value) do
+  Peluquero.Utils.safe_method :set, name, key, value do
     Peluquero.Redis.set(publisher(name), key, value)
   end
 
   @doc "Deletes the value by key from the redis, specified by name"
-  def del(name \\ nil, key) do
+  Peluquero.Utils.safe_method :del, name, key do
     Peluquero.Redis.del(publisher(name), key)
   end
 

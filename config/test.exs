@@ -15,4 +15,5 @@ config :peluquero, :peluquerias, [
 # With mix test --include local_only
 # change the value in the line below to:
 #   [eventory: [consul: "configuration/erniecluster/redis"]]
+# config :peluquero, :safe_peinados, true
 config :peluquero, :peinados, []

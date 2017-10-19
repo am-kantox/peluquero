@@ -84,4 +84,35 @@ defmodule Peluquero.Utils do
       _ -> []
     end
   end
+
+  ##############################################################################
+
+  defmacro safe_method(name, id, param, do: block) do
+    if Application.get_env(:peluquero, :safe_peinados, false) do
+      quote do
+        def unquote(name)(unquote(id) \\ nil, unquote(param)) do
+          if child?(unquote(id)), do: unquote(block)
+        end
+      end
+    else
+      quote do
+        def unquote(name)(unquote(id) \\ nil, unquote(param)),
+          do: unquote(block)
+      end
+    end
+  end
+  defmacro safe_method(name, id, param1, param2, do: block) do
+    if Application.get_env(:peluquero, :safe_peinados, false) do
+      quote do
+        def unquote(name)(unquote(id) \\ nil, unquote(param1), unquote(param2)) do
+          if child?(unquote(id)), do: unquote(block)
+        end
+      end
+    else
+      quote do
+        def unquote(name)(unquote(id) \\ nil, unquote(param1), unquote(param2)),
+          do: unquote(block)
+      end
+    end
+  end
 end
