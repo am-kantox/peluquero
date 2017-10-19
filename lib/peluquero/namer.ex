@@ -22,6 +22,27 @@ defmodule Peluquero.Namer do
                   |> Enum.map(&String.capitalize/1)
         Module.concat([module | modules])
       end
+
+      @spec fqparent(Atom.t | String.t | List.t) :: Atom.t
+      def fqparent(name)
+      def fqparent(name) when is_list(name) do
+        with [_, suffix | h] <- :lists.reverse(name) do
+          module = h
+                   |> :lists.reverse
+                   |> Module.concat()
+          fqname(module, suffix)
+        end
+      end
+      def fqparent(name) when is_binary(name) do
+        name
+        |> String.split(".")
+        |> fqparent()
+      end
+      def fqparent(name) when is_atom(name) do
+        name
+        |> Atom.to_string()
+        |> fqparent()
+      end
     end
   end
 end

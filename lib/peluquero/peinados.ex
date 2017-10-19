@@ -29,7 +29,38 @@ defmodule Peluquero.Peinados do
 
   ##############################################################################
 
-  # @doc "Sets a new value for the key in the redis, specified by name"
+  @doc "Retrieves the list of peinados available"
+  def children(format \\ :full)
+
+  @doc "Retrieves the list of peinados available"
+  def children(:full), do: Supervisor.which_children(Peluquero.Peinados)
+
+  @doc "Retrieves the list of peinados available"
+  def children(:short), do: Enum.map(children(:full), fn {name, _, _, _} -> name end)
+
+  @doc "Retrieves the list of peinados available"
+  def children(:uniq) do
+    :short
+    |> children()
+    |> Enum.map(&fqparent/1)
+    |> Enum.uniq
+  end
+
+  @doc "Checks whether the child exists"
+  def child?(name), do: Enum.member?(children(:uniq), fqname(Peluquero.Redis, name))
+
+  ##############################################################################
+
+  @doc "Returns true if Peinados has at least one child."
+  def active?() do
+    %{specs: _specs,
+      active: active,
+      supervisors: _supervisors,
+      workers: _workers} = Supervisor.count_children(Peluquero.Peinados)
+    active > 0
+  end
+
+  @doc "Retrieves the value by key from the redis, specified by name"
   def get(name \\ nil, key) do
     case Peluquero.Redis.get(publisher(name), key) do
       :undefined -> nil
@@ -37,12 +68,12 @@ defmodule Peluquero.Peinados do
     end
   end
 
-  # @doc "Retrieves the value by key from the redis, specified by name"
+  @doc "Sets a new value for the key in the redis, specified by name"
   def set(name \\ nil, key, value) do
     Peluquero.Redis.set(publisher(name), key, value)
   end
 
-  # @doc "Deletes the value by key from the redis, specified by name"
+  @doc "Deletes the value by key from the redis, specified by name"
   def del(name \\ nil, key) do
     Peluquero.Redis.del(publisher(name), key)
   end
