@@ -25,4 +25,20 @@ defmodule Peluquero.Namer.Test do
   after
     purge Sample
   end
+
+  test "fqparent/1" do
+    Code.eval_string """
+    defmodule Sample do
+      use Peluquero.Namer
+
+      def test(name), do: fqparent(name)
+    end
+    """
+    assert Sample.test(Foo.Bar.Baz) == Foo.Bar
+    assert Sample.test("Foo.Bar") == Foo
+    assert Sample.test(~w|Foo Bar Baz|) == Foo.Bar
+    assert Sample.test(~w|Foo Bar Baz|a) == Foo.Bar
+  after
+    purge Sample
+  end
 end
