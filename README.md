@@ -141,6 +141,18 @@ config :peluquero, :scissors, [{IO, :inspect}]
 
 ## Changelog
 
+### `0.7.0`
+
+`Peinados` were granted with diagnostics:
+
+```elixir
+@spec children([:full|:short|:uniq]) :: List.t
+@spec child?(String.t) :: bool
+@spec active?() :: bool
+```
+
+Also, new configuration parameter added: `safe_peinados`. When `true`, returns `nil` instead of throwing an exception on calls to incorrect peinados.
+
 ### `0.6.0`
 
 - **BREAKING** removed a deprecated `Supervisor.Spec` and dropped support for Elixir < 1.5
