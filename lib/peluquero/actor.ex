@@ -40,14 +40,15 @@ defmodule Peluquero.Actor do
   ##############################################################################
 
   def handle_call({:shear, payload}, _from, state) do
-    task = Task.async(fn ->
-      Peluquero.Peluqueria.publish!(
-        state[:name],
-        Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
-          {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
-          handler, payload when is_function(handler, 1) -> handler.(payload) || payload
-        end))
-    end)
-    {:reply, task, state}
+  # task = Task.async(fn ->
+  #    Peluquero.Peluqueria.publish!(
+  #      state[:name],
+  #      Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
+  #        {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
+  #        handler, payload when is_function(handler, 1) -> handler.(payload) || payload
+  #      end))
+  #  end)
+  #  {:reply, task, state}
+    {:reply, nil, state}
   end
 end
