@@ -141,6 +141,10 @@ config :peluquero, :scissors, [{IO, :inspect}]
 
 ## Changelog
 
+### `0.7.2`
+
+More sophisticated queue name, including all nodes name’s hash.
+
 ### `0.7.0`
 
 `Peinados` were granted with diagnostics:
