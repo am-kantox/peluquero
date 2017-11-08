@@ -155,7 +155,7 @@ defmodule Peluquero.Rabbit do
     end
 
     with {:ok, channel} <- Channel.open(conn),
-          queue <- settings[:queue] || exchange <> "." <> @queue do
+          queue <- settings[:queue] || exchange <> "." <> @queue <> "." <> nodes_hash() do
 
       # set `prefetch_count` param for consumers
       if sucker, do: Basic.qos(channel, prefetch_count: prefetch_count)
@@ -233,5 +233,16 @@ defmodule Peluquero.Rabbit do
   defp connection_details(nil, _), do: []
   defp connection_details(consul, type) do
     Peluquero.Utils.consul(consul, Atom.to_string(type))
+  end
+
+  defp nodes_hash() do
+    names =
+      [node() | Node.list()]
+      |> Enum.map(&Atom.to_string/1)
+      |> Enum.sort()
+      |> Enum.join()
+    :md5
+      |> :crypto.hash(names)
+      |> Base.encode16()
   end
 end

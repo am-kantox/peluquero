@@ -40,7 +40,7 @@ defmodule Peluquero.Actor do
   ##############################################################################
 
   def handle_call({:shear, payload}, _from, state) do
-   task = Task.async(fn ->
+    task = Task.async(fn ->
       Peluquero.Peluqueria.publish!(
         state[:name],
         Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
