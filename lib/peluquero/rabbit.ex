@@ -41,6 +41,7 @@ defmodule Peluquero.Rabbit do
   ### format is: [exchange1: [routing_key: "rates", prefetch_count: 30], exchange2: [], ...]
   # @connection_keys ~w|sources destinations|a
   @prefetch_count "50"
+  @max_queue_len "100000"
   @durable false
   @auto_delete true
   @exchange "amq.fanout"
@@ -148,6 +149,8 @@ defmodule Peluquero.Rabbit do
     durable = settings[:durable] == "true" || @durable
     auto_delete = settings[:auto_delete] == "true" || @auto_delete
     prefetch_count = String.to_integer(settings[:prefetch_count] || @prefetch_count)
+    arguments = [{"x-max-length", String.to_integer(settings[:x_max_length] || @max_queue_len)}]
+
     {direct_or_fanout, queue_params} = if settings[:routing_key] do
       {:direct, [routing_key: settings[:routing_key]]}
     else
@@ -160,7 +163,9 @@ defmodule Peluquero.Rabbit do
       # set `prefetch_count` param for consumers
       if sucker, do: Basic.qos(channel, prefetch_count: prefetch_count)
 
-      Queue.declare(channel, queue, durable: @durable, auto_delete: auto_delete)
+      Queue.declare(channel, queue, durable: @durable,
+                                    auto_delete: auto_delete,
+                                    arguments: arguments)
       apply(Exchange, direct_or_fanout, [channel, exchange, [durable: durable]])
 
       if sucker do
