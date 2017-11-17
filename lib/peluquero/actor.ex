@@ -13,6 +13,8 @@ defmodule Peluquero.Actor do
     GenServer.start_link(__MODULE__, opts)
   end
 
+  def init(args), do: {:ok, args}
+
   # @spec handler!((Atom.t | String.t | nil), Function.t) :: :ok
   # def handler!(name \\ nil, fun)
   #

@@ -256,7 +256,7 @@ defmodule Peluquero.Rabbit do
          |> to_string()
          |> Integer.parse() do
       {value, ""} -> [{"x-max-length", value}]
-      {value, _}  -> [{"x-max-length", @max_queue_len}]
+      {_, _}  -> [{"x-max-length", @max_queue_len}]
       :error      -> []
     end
   end
