@@ -34,6 +34,8 @@ defmodule Peluquero.Peluqueria do
       GenServer.start_link(__MODULE__, opts[:scissors] || [], name: fqname(opts))
     end
 
+    def init(args), do: {:ok, args}
+
     def handle_call(:shavery, _from, state), do: {:reply, state, state}
 
     def handle_call({:scissors, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
@@ -56,12 +58,13 @@ defmodule Peluquero.Peluqueria do
         worker_module: Peluquero.Actor])
 
     rabbits = Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
+      name = Module.concat(fqname(Peluquero.Rabbit, opts), "Worker#{idx}")
       worker(Peluquero.Rabbit,
-        [[name: opts[:name],
+        [[name: name,
           opts: opts[:opts] || @opts,
           consul: opts[:consul] || @consul,
           rabbit: opts[:rabbit] || @rabbit]],
-        id: Module.concat(fqname(Peluquero.Rabbit, opts), "Worker#{idx}"))
+        id: name)
     end)
 
     children = [

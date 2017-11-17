@@ -149,13 +149,7 @@ defmodule Peluquero.Rabbit do
     durable = settings[:durable] == "true" || @durable
     auto_delete = settings[:auto_delete] == "true" || @auto_delete
     prefetch_count = String.to_integer(settings[:prefetch_count] || @prefetch_count)
-    arguments = case settings[:x_max_length]
-                     |> to_string()
-                     |> Integer.parse() do
-                  {value, ""} -> [{"x-max-length", value}]
-                  {value, _}  -> [{"x-max-length", @max_queue_len}]
-                  :error      -> []
-                end
+    arguments = extract_arguments(settings)
 
     {direct_or_fanout, queue_params} = if settings[:routing_key] do
       {:direct, [routing_key: settings[:routing_key]]}
@@ -255,5 +249,15 @@ defmodule Peluquero.Rabbit do
     :md5
       |> :crypto.hash(names)
       |> Base.encode16()
+  end
+
+  defp extract_arguments(settings) do
+    case settings[:x_max_length]
+         |> to_string()
+         |> Integer.parse() do
+      {value, ""} -> [{"x-max-length", value}]
+      {value, _}  -> [{"x-max-length", @max_queue_len}]
+      :error      -> []
+    end
   end
 end
