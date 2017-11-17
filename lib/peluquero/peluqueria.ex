@@ -34,6 +34,8 @@ defmodule Peluquero.Peluqueria do
       GenServer.start_link(__MODULE__, opts[:scissors] || [], name: fqname(opts))
     end
 
+    def init(args), do: {:ok, args}
+
     def handle_call(:shavery, _from, state), do: {:reply, state, state}
 
     def handle_call({:scissors, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
