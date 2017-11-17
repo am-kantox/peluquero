@@ -149,7 +149,13 @@ defmodule Peluquero.Rabbit do
     durable = settings[:durable] == "true" || @durable
     auto_delete = settings[:auto_delete] == "true" || @auto_delete
     prefetch_count = String.to_integer(settings[:prefetch_count] || @prefetch_count)
-    arguments = [{"x-max-length", String.to_integer(settings[:x_max_length] || @max_queue_len)}]
+    arguments = case settings[:x_max_length]
+                     |> to_string()
+                     |> Integer.parse() do
+                  {value, ""} -> [{"x-max-length", value}]
+                  {value, _}  -> [{"x-max-length", @max_queue_len}]
+                  :error      -> []
+                end
 
     {direct_or_fanout, queue_params} = if settings[:routing_key] do
       {:direct, [routing_key: settings[:routing_key]]}
