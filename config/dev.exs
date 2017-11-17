@@ -3,10 +3,10 @@ use Mix.Config
 config :peluquero, :peluquerias, [
   p1:  [scissors: [],
         rabbits: 1,
-        consul: "configuration/macroservices/peluquero",
+        consul: "configuration/macroservices_dev/peluquero",
         pool: [actors: [size: 50, max_overflow: 100]]],
   p2:  [scissors: [],
-        rabbits: 1,
+        rabbits: 2,
         rabbit: [
           host: "localhost",
           password: "guest",
@@ -17,5 +17,5 @@ config :peluquero, :peluquerias, [
 ]
 
 config :peluquero, :peinados, [
-  eventory: [consul: "configuration/erniecluster/redis"]
+  eventory: [consul: "configuration/macroservices_dev/redis"]
 ]

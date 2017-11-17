@@ -56,13 +56,15 @@ defmodule Peluquero.Peluqueria do
         worker_module: Peluquero.Actor])
 
     rabbits = Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
+      name = Module.concat(fqname(Peluquero.Rabbit, opts), "Worker#{idx}")
       worker(Peluquero.Rabbit,
-        [[name: opts[:name],
+        [[name: name,
           opts: opts[:opts] || @opts,
           consul: opts[:consul] || @consul,
           rabbit: opts[:rabbit] || @rabbit]],
-        id: Module.concat(fqname(Peluquero.Rabbit, opts), "Worker#{idx}"))
+        id: name)
     end)
+    IO.inspect rabbits, label: "★★★"
 
     children = [
       worker(Peluquero.Peluqueria.Chairs,
