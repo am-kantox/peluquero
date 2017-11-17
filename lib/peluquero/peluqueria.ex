@@ -64,7 +64,6 @@ defmodule Peluquero.Peluqueria do
           rabbit: opts[:rabbit] || @rabbit]],
         id: name)
     end)
-    IO.inspect rabbits, label: "★★★"
 
     children = [
       worker(Peluquero.Peluqueria.Chairs,
