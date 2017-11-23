@@ -32,7 +32,8 @@ defmodule Peluquero.Rabbit do
 
   use GenServer
   use Peluquero.Namer
-  use AMQP
+  # use Peluquero.Rabbit.Amqp
+  use Peluquero.Rabbit.Wabbit
 
   require Logger
 
