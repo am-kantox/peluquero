@@ -36,6 +36,8 @@ defmodule Peluquero.Rabbit do
 
   require Logger
 
+  @ack_upfront Application.get_env(:peluquero, :ack_upfront, false)
+
   # @joiner "/"
 
   ### format is: [exchange1: [routing_key: "rates", prefetch_count: 30], exchange2: [], ...]
@@ -205,9 +207,11 @@ defmodule Peluquero.Rabbit do
 
   defp consume(name, channel, tag, redelivered, payload) do
     try do
-      Peluquero.Peluqueria.shear!(name, payload)
+      name
+      |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: @ack_upfront)
+      |> Enum.each(fn {mod, fun, args} -> Kernel.apply(mod, fun, args) end)
+
       Logger.debug(fn -> "[✎ #{name}] rabbit.consume in #{inspect channel}] #{inspect payload}" end)
-      Task.async(Basic, :ack, [channel, tag])
     rescue
       exception ->
         # Requeue unless it's a redelivered message.
@@ -216,6 +220,16 @@ defmodule Peluquero.Rabbit do
         Logger.error(fn -> "[⚑ #{name}] #{inspect exception} (while understanding #{inspect payload})" end)
         Basic.reject channel, tag, requeue: not redelivered
     end
+  end
+
+  defp handle_message_chain(name, channel, tag, _redelivered, payload, ack_upfront: true) do
+    [{Task, :async, [Basic, :ack, [channel, tag]]},
+     {Peluquero.Peluqueria, :shear!, [name, payload]}]
+  end
+  defp handle_message_chain(name, channel, tag, redelivered, payload, ack_upfront: false) do
+    name
+    |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: true)
+    |> :lists.reverse()
   end
 
   ##############################################################################
