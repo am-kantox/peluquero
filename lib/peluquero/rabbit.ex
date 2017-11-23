@@ -223,8 +223,8 @@ defmodule Peluquero.Rabbit do
   end
 
   defp handle_message_chain(name, channel, tag, _redelivered, payload, ack_upfront: true) do
-    [ {Task, :async, [Basic, :ack, [channel, tag]]},
-      {Peluquero.Peluqueria, :shear!, [name, payload]} ]
+    [{Task, :async, [Basic, :ack, [channel, tag]]},
+     {Peluquero.Peluqueria, :shear!, [name, payload]}]
   end
   defp handle_message_chain(name, channel, tag, redelivered, payload, ack_upfront: false) do
     name
