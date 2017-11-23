@@ -58,7 +58,13 @@ defmodule Peluquero.Peluqueria do
         worker_module: Peluquero.Actor])
 
     rabbits = Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
-      name = Module.concat(fqname(Peluquero.Rabbit, opts), "Worker#{idx}")
+      name =
+        opts[:name]
+        |> to_string()
+        |> Macro.camelize()
+        |> Module.concat("Worker#{idx}")
+      name = fqname(Peluquero.Actor, name)
+
       worker(Peluquero.Rabbit,
         [[name: name,
           opts: opts[:opts] || @opts,
@@ -77,13 +83,36 @@ defmodule Peluquero.Peluqueria do
 
   ##############################################################################
 
+  defp trim(name) when is_atom(name), do: name |> to_string() |> trim()
+  defp trim(<<"Elixir." :: binary, _ :: binary>> = name) when is_binary(name) do
+    trim_leading =
+      case Module.split(name) do
+        ["Peluquero", "Actor" | rest] -> rest
+        ["Peluquero", "Rabbit" | rest] -> rest
+        ["Peluquero", "Peluqueria" | rest] -> rest
+        rest -> rest
+      end
+    trim_trailing =
+      case :lists.reverse(trim_leading) do
+        [<<"Worker" :: binary, _ :: binary>> | rest] -> rest
+        rest -> rest
+      end
+
+    trim_trailing
+    |> :lists.reverse()
+    |> Module.concat()
+  end
+  defp trim(name) when is_binary(name), do: name
+
   defp actor(nil), do: Peluquero.Actor
-  defp actor(opts) when is_list(opts), do: fqname(Peluquero.Actor, opts[:name])
-  defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, name)
+  defp actor(opts) when is_list(opts), do: actor(opts[:name])
+  defp actor(name) when is_atom(name) or is_binary(name),
+    do: fqname(Peluquero.Actor, trim(name))
 
   defp publisher(nil), do: Peluquero.Rabbit
-  defp publisher(opts) when is_list(opts), do: fqname(Peluquero.Rabbit, opts[:name])
-  defp publisher(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Rabbit, name)
+  defp publisher(opts) when is_list(opts), do: publisher(opts[:name])
+  defp publisher(name) when is_atom(name) or is_binary(name),
+    do: fqname(Peluquero.Rabbit, trim(name))
 
   ##############################################################################
 
