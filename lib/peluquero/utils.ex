@@ -1,6 +1,8 @@
 defmodule Peluquero.Utils do
   @moduledoc "Plain utilities for the project"
 
+  require Logger
+
   @joiner "/"
   @max_match 20
 
@@ -62,8 +64,8 @@ defmodule Peluquero.Utils do
            |> String.trim_trailing(@joiner)
     size = String.length(path)
 
-    case Consul.Kv.keys!(path) do
-      %HTTPoison.Response{body: keys} when is_list(keys) ->
+    case Consul.Kv.keys(path) do
+      {:ok, %HTTPoison.Response{body: keys}} when is_list(keys) ->
         keys
         |> Enum.map(fn
           <<_ :: binary-size(size), @joiner :: binary, key :: binary>> -> key
@@ -81,7 +83,12 @@ defmodule Peluquero.Utils do
         end)
         |> Enum.filter(& not is_nil(&1))
         |> Enum.into([])
-      _ -> []
+      {:error, %HTTPoison.Error{id: _, reason: :econnrefused}} ->
+        Logger.error("Connection to consul refused for path [#{path}], check settings")
+        []
+      any ->
+        Logger.error("Unexpected error while connecting to consul: [#{inspect any}]")
+        []
     end
   end
 

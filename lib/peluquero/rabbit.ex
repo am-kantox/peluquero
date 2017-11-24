@@ -236,14 +236,17 @@ defmodule Peluquero.Rabbit do
 
   defp connection_params(%State{rabbit: rabbit}) when not is_nil(rabbit), do: rabbit
   defp connection_params(%State{consul: consul}) when not is_nil(consul) do
-    rabbit = Peluquero.Utils.consul(consul, ~w|rabbit|)
-    [
-      host: rabbit[:host],
-      port: String.to_integer(rabbit[:port]),
-      virtual_host: rabbit[:virtual_host],
-      username: rabbit[:user],
-      password: rabbit[:password]
-    ]
+    case Peluquero.Utils.consul(consul, ~w|rabbit|) do
+      [] -> []
+      rabbit ->
+        [
+          host: rabbit[:host],
+          port: String.to_integer(rabbit[:port]),
+          virtual_host: rabbit[:virtual_host],
+          username: rabbit[:user],
+          password: rabbit[:password]
+        ]
+    end
   end
   defp connection_params(_) do
     raise "Either consul or rabbit must be set in config.exs"
