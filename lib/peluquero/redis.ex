@@ -23,12 +23,12 @@ defmodule Peluquero.Redis do
   def shutdown, do: GenServer.cast(__MODULE__, :shutdown)
 
   def handle_info({:DOWN, _, :process, _pid, reason}, state) do
-    Logger.log :info, "⇑ reconnecting after ⇓ for #{inspect reason} reason"
+    Logger.log(:info, "⇑ reconnecting after ⇓ for #{inspect(reason)} reason")
     {:noreply, Keyword.merge(state, redis: redis_connect(state[:name], state[:consul]))}
   end
 
   def handle_cast(:shutdown, state) do
-    Logger.log :info, "⇓ shutdown options: #{inspect state[:opts]}"
+    Logger.log(:info, "⇓ shutdown options: #{inspect(state[:opts])}")
     Exredis.stop(state[:redis])
     {:noreply, nil}
   end
@@ -51,14 +51,19 @@ defmodule Peluquero.Redis do
 
   defp redis_connect(name, consul) do
     conn_params = connection_params(consul, name)
+
     case Exredis.start_link(conn_params) do
       {:ok, client} ->
-        Logger.log :warn, ~s|★ Redis: [name: :#{name}, consul: "#{consul}", redis: #{inspect client}]|
+        Logger.log(
+          :warn,
+          ~s|★ Redis: [name: :#{name}, consul: "#{consul}", redis: #{inspect(client)}]|
+        )
+
         client
 
       {:error, reason} ->
         # Reconnection loop
-        Logger.log :warn, "⇓ redis™ error, reason: #{inspect reason}"
+        Logger.log(:warn, "⇓ redis™ error, reason: #{inspect(reason)}")
         Process.sleep(1_000)
         redis_connect(name, consul)
     end
@@ -72,11 +77,12 @@ defmodule Peluquero.Redis do
         host: redis[:host],
         port: String.to_integer(redis[:port]),
         db: String.to_integer(redis[:database]),
-        password: "", # redis.pwd,
+        # redis.pwd,
+        password: "",
         reconnect: :no_reconnect,
         max_queue: :infinity,
         behaviour: :drop
-       }
+      }
     end
   end
 end

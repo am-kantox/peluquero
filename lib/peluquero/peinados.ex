@@ -12,17 +12,22 @@ defmodule Peluquero.Peinados do
   end
 
   def init(peinados) do
-    children = peinados
-               |> Enum.with_index
-               |> Enum.map(fn {peinado, idx} ->
-      {name, settings} = case peinado do
-                           {name, settings} -> {name, settings}
-                           name -> {name, []}
-                         end
-      worker(Peluquero.Redis,
-        [[name: name, consul: settings[:consul] || @consul, opts: settings]],
-        id: Module.concat(fqname(Peluquero.Redis, name), "Worker#{idx}"))
-    end)
+    children =
+      peinados
+      |> Enum.with_index()
+      |> Enum.map(fn {peinado, idx} ->
+           {name, settings} =
+             case peinado do
+               {name, settings} -> {name, settings}
+               name -> {name, []}
+             end
+
+           worker(
+             Peluquero.Redis,
+             [[name: name, consul: settings[:consul] || @consul, opts: settings]],
+             id: Module.concat(fqname(Peluquero.Redis, name), "Worker#{idx}")
+           )
+         end)
 
     supervise(children, strategy: :one_for_one)
   end
@@ -43,7 +48,7 @@ defmodule Peluquero.Peinados do
     :short
     |> children()
     |> Enum.map(&fqparent/1)
-    |> Enum.uniq
+    |> Enum.uniq()
   end
 
   @doc "Checks whether the child exists"
@@ -53,10 +58,9 @@ defmodule Peluquero.Peinados do
 
   @doc "Returns true if Peinados has at least one child."
   def active?() do
-    %{specs: _specs,
-      active: active,
-      supervisors: _supervisors,
-      workers: _workers} = Supervisor.count_children(Peluquero.Peinados)
+    %{specs: _specs, active: active, supervisors: _supervisors, workers: _workers} =
+      Supervisor.count_children(Peluquero.Peinados)
+
     active > 0
   end
 
@@ -85,5 +89,4 @@ defmodule Peluquero.Peinados do
   defp publisher(nil), do: Peluquero.Redis
   defp publisher(opts) when is_list(opts), do: fqname(Peluquero.Redis, opts[:name])
   defp publisher(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Redis, name)
-
 end
