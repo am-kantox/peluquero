@@ -5,9 +5,9 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.8.5",
+      version: "0.8.6",
       elixir: "~> 1.5",
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
       deps: deps()
@@ -17,7 +17,8 @@ defmodule Peluquero.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :amqp], mod: {Peluquero, [name: Application]}
+      extra_applications: [:logger, :amqp],
+      mod: {Peluquero, [name: Application]}
     ]
   end
 
@@ -25,18 +26,15 @@ defmodule Peluquero.Mixfile do
   defp deps do
     [
       {:gen_stage, "~> 0.11"},
-
       {:rabbit_common, "~> 3.5"},
       {:amqp_client, "~> 3.5"},
       {:amqp, "~> 0.2"},
       {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
-
       {:consul, "~> 1.1"},
       {:httpoison, "~> 0.9"},
       {:yaml_elixir, "~> 1.0"},
       {:json, "~> 1.0"},
-
       {:credo, "~> 0.8.10", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev},
@@ -56,11 +54,14 @@ defmodule Peluquero.Mixfile do
 
   defp package do
     [
-     name: :peluquero,
-     files: ~w|lib mix.exs README.md|,
-     maintainers: ["Aleksei Matiushkin"],
-     licenses: ["MIT"],
-     links: %{"GitHub" => "https://github.com/am-kantox/peluquero",
-              "Docs" => "https://hexdocs.pm/peluquero"}]
+      name: :peluquero,
+      files: ~w|lib mix.exs README.md|,
+      maintainers: ["Aleksei Matiushkin"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/am-kantox/peluquero",
+        "Docs" => "https://hexdocs.pm/peluquero"
+      }
+    ]
   end
 end

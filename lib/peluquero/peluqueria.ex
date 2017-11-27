@@ -6,11 +6,11 @@ defmodule Peluquero.Peluqueria do
   use Peluquero.Namer
 
   @scissors Application.get_env(:peluquero, :scissors, [])
-  @rabbits  Application.get_env(:peluquero, :rabbits, 1)
-  @opts     Application.get_env(:peluquero, :opts, [])
-  @consul   Application.get_env(:peluquero, :consul, nil)
-  @rabbit   Application.get_env(:peluquero, :rabbit, nil)
-  @pool     Application.get_env(:peluquero, :pool, [])
+  @rabbits Application.get_env(:peluquero, :rabbits, 1)
+  @opts Application.get_env(:peluquero, :opts, [])
+  @consul Application.get_env(:peluquero, :consul, nil)
+  @rabbit Application.get_env(:peluquero, :rabbit, nil)
+  @pool Application.get_env(:peluquero, :pool, [])
 
   defmodule Chairs do
     @moduledoc false
@@ -48,35 +48,46 @@ defmodule Peluquero.Peluqueria do
   end
 
   def init(opts) do
-    pool = Keyword.merge([
-        actors: [size: 5, max_overflow: 10],
-        type: :local],
-      opts[:pool] || @pool)
+    pool =
+      Keyword.merge([actors: [size: 5, max_overflow: 10], type: :local], opts[:pool] || @pool)
 
-    pool_actor = Keyword.merge(pool[:actors], [
+    pool_actor =
+      Keyword.merge(
+        pool[:actors],
         name: {pool[:type], actor(opts)},
-        worker_module: Peluquero.Actor])
+        worker_module: Peluquero.Actor
+      )
 
-    rabbits = Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
-      name =
-        opts[:name]
-        |> to_string()
-        |> Macro.camelize()
-        |> Module.concat("Worker#{idx}")
-      name = fqname(Peluquero.Actor, name)
+    rabbits =
+      Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
+        name =
+          opts[:name]
+          |> to_string()
+          |> Macro.camelize()
+          |> Module.concat("Worker#{idx}")
 
-      worker(Peluquero.Rabbit,
-        [[name: name,
-          opts: opts[:opts] || @opts,
-          consul: opts[:consul] || @consul,
-          rabbit: opts[:rabbit] || @rabbit]],
-        id: name)
-    end)
+        name = fqname(Peluquero.Actor, name)
+
+        worker(
+          Peluquero.Rabbit,
+          [
+            [
+              name: name,
+              opts: opts[:opts] || @opts,
+              consul: opts[:consul] || @consul,
+              rabbit: opts[:rabbit] || @rabbit
+            ]
+          ],
+          id: name
+        )
+      end)
 
     children = [
-      worker(Peluquero.Peluqueria.Chairs,
-        [[name: opts[:name], scissors: opts[:scissors] || @scissors]]) |
-      [:poolboy.child_spec(actor(opts), pool_actor, [name: opts[:name]]) | rabbits]]
+      worker(Peluquero.Peluqueria.Chairs, [
+        [name: opts[:name], scissors: opts[:scissors] || @scissors]
+      ])
+      | [:poolboy.child_spec(actor(opts), pool_actor, name: opts[:name]) | rabbits]
+    ]
 
     supervise(children, strategy: :one_for_one)
   end
@@ -84,7 +95,8 @@ defmodule Peluquero.Peluqueria do
   ##############################################################################
 
   defp trim(name) when is_atom(name), do: name |> to_string() |> trim()
-  defp trim(<<"Elixir." :: binary, _ :: binary>> = name) when is_binary(name) do
+
+  defp trim(<<"Elixir."::binary, _::binary>> = name) when is_binary(name) do
     trim_leading =
       case Module.split(name) do
         ["Peluquero", "Actor" | rest] -> rest
@@ -92,9 +104,10 @@ defmodule Peluquero.Peluqueria do
         ["Peluquero", "Peluqueria" | rest] -> rest
         rest -> rest
       end
+
     trim_trailing =
       case :lists.reverse(trim_leading) do
-        [<<"Worker" :: binary, _ :: binary>> | rest] -> rest
+        [<<"Worker"::binary, _::binary>> | rest] -> rest
         rest -> rest
       end
 
@@ -102,15 +115,16 @@ defmodule Peluquero.Peluqueria do
     |> :lists.reverse()
     |> Module.concat()
   end
+
   defp trim(name) when is_binary(name), do: name
 
   defp actor(nil), do: Peluquero.Actor
   defp actor(opts) when is_list(opts), do: actor(opts[:name])
-  defp actor(name) when is_atom(name) or is_binary(name),
-    do: fqname(Peluquero.Actor, trim(name))
+  defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
 
   defp publisher(nil), do: Peluquero.Rabbit
   defp publisher(opts) when is_list(opts), do: publisher(opts[:name])
+
   defp publisher(name) when is_atom(name) or is_binary(name),
     do: fqname(Peluquero.Rabbit, trim(name))
 
@@ -123,9 +137,7 @@ defmodule Peluquero.Peluqueria do
 
   @doc "Adds a handler to the handlers list"
   def shear!(name \\ nil, payload) do
-    :poolboy.transaction(actor(name),
-      fn(pid) -> GenServer.call(pid, {:shear, payload}) end
-    )
+    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, payload}) end)
   end
 
   ##############################################################################

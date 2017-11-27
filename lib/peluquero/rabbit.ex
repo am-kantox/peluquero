@@ -3,8 +3,13 @@ defmodule Peluquero.Rabbit do
 
   defmodule State do
     @moduledoc false
-    defstruct name: nil, opts: [], consul: nil, rabbit: nil,
-              suckers: [], spitters: [], kisser: nil
+    defstruct name: nil,
+              opts: [],
+              consul: nil,
+              rabbit: nil,
+              suckers: [],
+              spitters: [],
+              kisser: nil
 
     def known?(%State{} = state, pid), do: not is_nil(lookup(state, pid))
 
@@ -64,15 +69,29 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   def init(%State{} = state) do
-    state = %State{state |
-      suckers: Keyword.merge(state.opts[:sources] || [], connection_details(state.consul, :sources)),
-      spitters: Keyword.merge(state.opts[:destinations] || [], connection_details(state.consul, :destinations))
+    state = %State{
+      state
+      | suckers: Keyword.merge(
+          state.opts[:sources] || [],
+          connection_details(state.consul, :sources)
+        ),
+        spitters: Keyword.merge(
+          state.opts[:destinations] || [],
+          connection_details(state.consul, :destinations)
+        )
     }
+
     rabbit_connect(state)
   end
 
   def start_link(opts) do
-    state = %State{name: opts[:name], opts: opts[:opts], consul: opts[:consul], rabbit: opts[:rabbit]}
+    state = %State{
+      name: opts[:name],
+      opts: opts[:opts],
+      consul: opts[:consul],
+      rabbit: opts[:rabbit]
+    }
+
     GenServer.start_link(__MODULE__, state, name: fqname(opts))
   end
 
@@ -96,17 +115,23 @@ defmodule Peluquero.Rabbit do
 
   @doc false
   # Main handler for the delivered message
-  def handle_info({:basic_deliver, payload, %{
-      delivery_tag: tag, redelivered: redelivered, exchange: exchange} = _meta},
-      %State{} = state) do
+  def handle_info(
+        {
+          :basic_deliver,
+          payload,
+          %{delivery_tag: tag, redelivered: redelivered, exchange: exchange} = _meta
+        },
+        %State{} = state
+      ) do
     with {channel, _, _} <- State.lookup(state, exchange),
-      do: consume(state.name, channel, tag, redelivered, payload)
+         do: consume(state.name, channel, tag, redelivered, payload)
+
     {:noreply, %State{} = state}
   end
 
   # rabbit went down OR one of child tasks is finished
   def handle_info({:DOWN, _, :process, pid, _reason}, %State{} = state) do
-    if State.known?(state, pid), do: raise "❤ planned crash to reinit rabbits"
+    if State.known?(state, pid), do: raise("❤ planned crash to reinit rabbits")
     {:noreply, state}
   end
 
@@ -118,20 +143,22 @@ defmodule Peluquero.Rabbit do
       Queue.delete(channel, queue)
       Channel.close(channel)
     end)
+
     Channel.close(state.kisser)
     {:noreply, %State{}}
   end
 
   def handle_cast({:publish, queue, exchange, payload}, %State{} = state) do
     with {:ok, _q} <- Queue.declare(state.kisser, queue, durable: true, auto_delete: false),
-          :ok <- Exchange.declare(state.kisser, exchange),
-          :ok <- Queue.bind(state.kisser, queue, exchange) do
-        Basic.publish(state.kisser, exchange, "", payload)
-        Queue.unbind(state.kisser, queue, exchange)
+         :ok <- Exchange.declare(state.kisser, exchange),
+         :ok <- Queue.bind(state.kisser, queue, exchange) do
+      Basic.publish(state.kisser, exchange, "", payload)
+      Queue.unbind(state.kisser, queue, exchange)
     else
       _ ->
-        Logger.warn(fn -> "⚑ error publishing #{inspect payload} to #{queue}(#{exchange})" end)
+        Logger.warn(fn -> "⚑ error publishing #{inspect(payload)} to #{queue}(#{exchange})" end)
     end
+
     {:noreply, state}
   end
 
@@ -139,8 +166,10 @@ defmodule Peluquero.Rabbit do
     Enum.each(state.spitters, fn {channel, _queue, exchange} ->
       Basic.publish(channel, exchange, "", payload)
     end)
+
     {:noreply, state}
   end
+
   def handle_cast({:publish, payload}, %State{} = state),
     do: handle_cast({:publish, JSON.encode!(payload)}, state)
 
@@ -153,27 +182,33 @@ defmodule Peluquero.Rabbit do
     prefetch_count = String.to_integer(settings[:prefetch_count] || @prefetch_count)
     arguments = extract_arguments(settings)
 
-    {direct_or_fanout, queue_params} = if settings[:routing_key] do
-      {:direct, [routing_key: settings[:routing_key]]}
-    else
-      {:fanout, []}
-    end
+    {direct_or_fanout, queue_params} =
+      if settings[:routing_key] do
+        {:direct, [routing_key: settings[:routing_key]]}
+      else
+        {:fanout, []}
+      end
 
     with {:ok, channel} <- Channel.open(conn),
-          queue <- settings[:queue] || exchange <> "." <> @queue <> "." <> nodes_hash() do
-
+         queue <- settings[:queue] || exchange <> "." <> @queue <> "." <> nodes_hash() do
       # set `prefetch_count` param for consumers
       if sucker, do: Basic.qos(channel, prefetch_count: prefetch_count)
 
-      Queue.declare(channel, queue, durable: @durable,
-                                    auto_delete: auto_delete,
-                                    arguments: arguments)
+      Queue.declare(
+        channel,
+        queue,
+        durable: @durable,
+        auto_delete: auto_delete,
+        arguments: arguments
+      )
+
       apply(Exchange, direct_or_fanout, [channel, exchange, [durable: durable]])
 
       if sucker do
         Queue.bind(channel, queue, exchange, queue_params)
         {:ok, _consumer_tag} = Basic.consume(channel, queue)
       end
+
       {channel, queue, exchange}
     end
   end
@@ -181,23 +216,27 @@ defmodule Peluquero.Rabbit do
   defp rabbit_connect(%State{} = state) do
     case Connection.open(connection_params(state)) do
       {:ok, conn} ->
-        Logger.info(fn -> "☆ Rabbit: #{inspect conn}" end)
+        Logger.info(fn -> "☆ Rabbit: #{inspect(conn)}" end)
 
         # get notifications when the connection goes down
         Process.monitor(conn.pid)
 
-        state = %State{state |
-          kisser: (with {:ok, channel} <- Channel.open(conn), do: channel),
-          suckers: Enum.map(state.suckers, &init_channel(conn, &1, true)),
-          spitters: Enum.map(state.spitters, &init_channel(conn, &1, false))
+        state = %State{
+          state
+          | kisser: with({:ok, channel} <- Channel.open(conn), do: channel),
+            suckers: Enum.map(state.suckers, &init_channel(conn, &1, true)),
+            spitters: Enum.map(state.spitters, &init_channel(conn, &1, false))
         }
 
-        Logger.warn(fn -> "★ Rabbit: #{inspect state}" end)
+        Logger.warn(fn -> "★ Rabbit: #{inspect(state)}" end)
 
         {:ok, state}
 
       {:error, reason} ->
-        Logger.warn(fn -> "⚐ Rabbit error, reason: #{inspect reason}, state: #{inspect state}" end)
+        Logger.warn(fn ->
+          "⚐ Rabbit error, reason: #{inspect(reason)}, state: #{inspect(state)}"
+        end)
+
         Process.sleep(1000)
         rabbit_connect(state)
     end
@@ -211,21 +250,29 @@ defmodule Peluquero.Rabbit do
       |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: @ack_upfront)
       |> Enum.each(fn {mod, fun, args} -> Kernel.apply(mod, fun, args) end)
 
-      Logger.debug(fn -> "[✎ #{name}] rabbit.consume in #{inspect channel}] #{inspect payload}" end)
+      Logger.debug(fn ->
+        "[✎ #{name}] rabbit.consume in #{inspect(channel)}] #{inspect(payload)}"
+      end)
     rescue
       exception ->
         # Requeue unless it's a redelivered message.
         # This means we will retry consuming a message once in case of exception
         # before we give up and have it moved to the error queue
-        Logger.error(fn -> "[⚑ #{name}] #{inspect exception} (while understanding #{inspect payload})" end)
-        Basic.reject channel, tag, requeue: not redelivered
+        Logger.error(fn ->
+          "[⚑ #{name}] #{inspect(exception)} (while understanding #{inspect(payload)})"
+        end)
+
+        Basic.reject(channel, tag, requeue: not redelivered)
     end
   end
 
   defp handle_message_chain(name, channel, tag, _redelivered, payload, ack_upfront: true) do
-    [{Task, :async, [Basic, :ack, [channel, tag]]},
-     {Peluquero.Peluqueria, :shear!, [name, payload]}]
+    [
+      {Task, :async, [Basic, :ack, [channel, tag]]},
+      {Peluquero.Peluqueria, :shear!, [name, payload]}
+    ]
   end
+
   defp handle_message_chain(name, channel, tag, redelivered, payload, ack_upfront: false) do
     name
     |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: true)
@@ -235,9 +282,12 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   defp connection_params(%State{rabbit: rabbit}) when not is_nil(rabbit), do: rabbit
+
   defp connection_params(%State{consul: consul}) when not is_nil(consul) do
     case Peluquero.Utils.consul(consul, ~w|rabbit|) do
-      [] -> []
+      [] ->
+        []
+
       rabbit ->
         [
           host: rabbit[:host],
@@ -248,11 +298,13 @@ defmodule Peluquero.Rabbit do
         ]
     end
   end
+
   defp connection_params(_) do
     raise "Either consul or rabbit must be set in config.exs"
   end
 
   defp connection_details(nil, _), do: []
+
   defp connection_details(consul, type) do
     Peluquero.Utils.consul(consul, Atom.to_string(type))
   end
@@ -263,9 +315,10 @@ defmodule Peluquero.Rabbit do
       |> Enum.map(&Atom.to_string/1)
       |> Enum.sort()
       |> Enum.join()
+
     :md5
-      |> :crypto.hash(names)
-      |> Base.encode16()
+    |> :crypto.hash(names)
+    |> Base.encode16()
   end
 
   defp extract_arguments(settings) do
@@ -273,8 +326,8 @@ defmodule Peluquero.Rabbit do
          |> to_string()
          |> Integer.parse() do
       {value, ""} -> [{"x-max-length", value}]
-      {_, _}  -> [{"x-max-length", @max_queue_len}]
-      :error      -> []
+      {_, _} -> [{"x-max-length", @max_queue_len}]
+      :error -> []
     end
   end
 end

@@ -10,7 +10,8 @@ use Mix.Config
 
 # config :peluquero, safe_peinados: false
 
-config :logger, level: :info # :debug
+# :debug
+config :logger, level: :info
 
 # It is also possible to import configuration files, relative to this
 # directory. For example, you can emulate configuration per environment
@@ -20,4 +21,4 @@ config :logger, level: :info # :debug
 #
 #     import_config "#{Mix.env}.exs"
 
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"

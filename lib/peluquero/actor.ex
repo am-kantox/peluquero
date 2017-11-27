@@ -48,7 +48,9 @@ defmodule Peluquero.Actor do
         Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
           {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
           handler, payload when is_function(handler, 1) -> handler.(payload) || payload
-        end))
+        end)
+      )
+
     {:reply, response, state}
   end
 end

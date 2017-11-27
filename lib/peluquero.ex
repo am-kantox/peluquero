@@ -93,11 +93,10 @@ defmodule Peluquero do
   `Peluquero.Peinados.set/3`.
   """
 
-  use Application  
-  
+  use Application
+
   @doc false
   def start(_type, args) do
     Peluquera.start_link(args)
   end
-
 end
