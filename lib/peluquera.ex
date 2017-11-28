@@ -1,6 +1,6 @@
 defmodule Peluquera do
   @moduledoc ~S"""
-  The top-level supervisor process that allows to use `Peluquero` inside the 
+  The top-level supervisor process that allows to use `Peluquero` inside the
     main application supervision tree rather than as a bare application.
   """
   use Supervisor

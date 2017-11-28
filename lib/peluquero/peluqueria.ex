@@ -66,7 +66,7 @@ defmodule Peluquero.Peluqueria do
           |> Macro.camelize()
           |> Module.concat("Worker#{idx}")
 
-        name = fqname(Peluquero.Actor, name)
+        name = fqname(Peluquero.Rabbit, name)
 
         worker(
           Peluquero.Rabbit,
@@ -118,15 +118,15 @@ defmodule Peluquero.Peluqueria do
 
   defp trim(name) when is_binary(name), do: name
 
-  defp actor(nil), do: Peluquero.Actor
-  defp actor(opts) when is_list(opts), do: actor(opts[:name])
-  defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
+  def actor(nil), do: Peluquero.Actor
+  def actor(opts) when is_list(opts), do: actor(opts[:name])
+  def actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
 
-  defp publisher(nil), do: Peluquero.Rabbit
-  defp publisher(opts) when is_list(opts), do: publisher(opts[:name])
+  def publisher(nil), do: Peluquero.Rabbit
+  def publisher(opts) when is_list(opts), do: publisher(opts[:name])
 
-  defp publisher(name) when is_atom(name) or is_binary(name),
-    do: fqname(Peluquero.Rabbit, trim(name))
+  def publisher(name) when is_atom(name) or is_binary(name),
+    do: Module.concat(fqname(Peluquero.Rabbit, trim(name)), "Worker1")
 
   ##############################################################################
 
