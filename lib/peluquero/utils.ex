@@ -19,7 +19,7 @@ defmodule Peluquero.Utils do
         iex> Peluquero.Utils.consul_key_type("a")
         {:plain, :item, "a"}
   """
-  @spec consul_key_type(String.t()) :: {:plain | :nested, :bag | :item}
+  @spec consul_key_type(String.t()) :: {:plain | :nested, :bag | :item, String.t()}
   def consul_key_type(key)
 
   0..@max_match

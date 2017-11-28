@@ -19,11 +19,13 @@ defmodule Peluquero.Peluqueria do
     use Peluquero.Namer
 
     @doc "Adds a middleware to the middlewares list"
+    @spec scissors!(String.t | Atom.t, Function.t | Tuple.t) :: any()
     def scissors!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
       GenServer.call(fqname(__MODULE__, name), {:scissors, fun})
     end
 
     @doc "Retrieves a list of middlewares"
+    @spec scissors?(String.t | Atom.t) :: [Function.t | Tuple.t]
     def scissors?(name \\ nil) do
       GenServer.call(fqname(__MODULE__, name), :shavery)
     end
@@ -118,14 +120,14 @@ defmodule Peluquero.Peluqueria do
 
   defp trim(name) when is_binary(name), do: name
 
-  def actor(nil), do: Peluquero.Actor
-  def actor(opts) when is_list(opts), do: actor(opts[:name])
-  def actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
+  defp actor(nil), do: Peluquero.Actor
+  defp actor(opts) when is_list(opts), do: actor(opts[:name])
+  defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
 
-  def publisher(nil), do: Peluquero.Rabbit
-  def publisher(opts) when is_list(opts), do: publisher(opts[:name])
+  defp publisher(nil), do: Peluquero.Rabbit
+  defp publisher(opts) when is_list(opts), do: publisher(opts[:name])
 
-  def publisher(name) when is_atom(name) or is_binary(name),
+  defp publisher(name) when is_atom(name) or is_binary(name),
     do: Module.concat(fqname(Peluquero.Rabbit, trim(name)), "Worker1")
 
   ##############################################################################
@@ -138,6 +140,16 @@ defmodule Peluquero.Peluqueria do
   @doc "Adds a handler to the handlers list"
   def shear!(name \\ nil, payload) do
     :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, payload}) end)
+  end
+
+  @doc "Directly publishes a payload to the publisher specified by name"
+  def comb!(name \\ nil, payload) do
+    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, payload}) end)
+  end
+
+  @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
+  def comb!(name, queue, exchange, payload) do
+    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, queue, exchange, payload}) end)
   end
 
   ##############################################################################

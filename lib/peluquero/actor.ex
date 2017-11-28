@@ -53,4 +53,18 @@ defmodule Peluquero.Actor do
 
     {:reply, response, state}
   end
+
+  def handle_call({:comb, payload}, _from, state) do
+    response =
+      Peluquero.Peluqueria.publish!(state[:name], payload)
+
+    {:reply, response, state}
+  end
+
+  def handle_call({:comb, queue, exchange, payload}, _from, state) do
+    response =
+      Peluquero.Peluqueria.publish!(state[:name], queue, exchange, payload)
+
+    {:reply, response, state}
+  end
 end
