@@ -41,15 +41,56 @@ defmodule Peluquero.Actor do
 
   ##############################################################################
 
+  defp smart_payload(:ok, payload), do: payload  # GenServer.cast
+  defp smart_payload(nil, payload), do: payload  # explicitly discarded FIXME NEEDED?
+  defp smart_payload(%{} = result, _payload), do: result
+  defp smart_payload(garbage, _payload),
+    do: raise(Peluquero.Errors.UnknownTarget, target: garbage, reason: :scissors)
+
+  defp reduce_payload(name, payload) do
+    name
+    |> Peluquero.Peluqueria.Chairs.scissors?()
+    |> Enum.reduce(payload, fn
+      {mod, fun}, payload ->
+        mod
+        |> apply(fun, [payload])
+        |> smart_payload(payload)
+      handler, payload when is_function(handler, 1) ->
+        handler.(payload)
+        |> smart_payload(payload)
+      anything, _payload ->
+        raise(Peluquero.Errors.UnknownTarget, target: anything, reason: :scissors_settings)
+    end)
+  end
+
   def handle_call({:shear, payload}, _from, state) do
     response =
       Peluquero.Peluqueria.publish!(
-        state[:name],
-        Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
-          {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
-          handler, payload when is_function(handler, 1) -> handler.(payload) || payload
-        end)
+        state[:name], reduce_payload(state[:name], payload)
       )
+
+    {:reply, response, state}
+  end
+
+  def handle_call({:shear, queue, exchange, payload}, _from, state) do
+    response =
+      Peluquero.Peluqueria.publish!(
+        state[:name], queue, exchange, reduce_payload(state[:name], payload)
+      )
+
+    {:reply, response, state}
+  end
+
+  def handle_call({:comb, payload}, _from, state) do
+    response =
+      Peluquero.Peluqueria.publish!(state[:name], payload)
+
+    {:reply, response, state}
+  end
+
+  def handle_call({:comb, queue, exchange, payload}, _from, state) do
+    response =
+      Peluquero.Peluqueria.publish!(state[:name], queue, exchange, payload)
 
     {:reply, response, state}
   end

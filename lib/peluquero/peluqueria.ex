@@ -5,6 +5,8 @@ defmodule Peluquero.Peluqueria do
   use Supervisor
   use Peluquero.Namer
 
+  require Logger
+
   @scissors Application.get_env(:peluquero, :scissors, [])
   @rabbits Application.get_env(:peluquero, :rabbits, 1)
   @opts Application.get_env(:peluquero, :opts, [])
@@ -19,11 +21,13 @@ defmodule Peluquero.Peluqueria do
     use Peluquero.Namer
 
     @doc "Adds a middleware to the middlewares list"
+    @spec scissors!(String.t | Atom.t, Function.t | Tuple.t) :: any()
     def scissors!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
       GenServer.call(fqname(__MODULE__, name), {:scissors, fun})
     end
 
     @doc "Retrieves a list of middlewares"
+    @spec scissors?(String.t | Atom.t) :: [Function.t | Tuple.t]
     def scissors?(name \\ nil) do
       GenServer.call(fqname(__MODULE__, name), :shavery)
     end
@@ -118,15 +122,45 @@ defmodule Peluquero.Peluqueria do
 
   defp trim(name) when is_binary(name), do: name
 
-  def actor(nil), do: Peluquero.Actor
-  def actor(opts) when is_list(opts), do: actor(opts[:name])
-  def actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
+  defp actor(nil), do: Peluquero.Actor
+  defp actor(opts) when is_list(opts), do: actor(opts[:name])
+  defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
 
-  def publisher(nil), do: Peluquero.Rabbit
-  def publisher(opts) when is_list(opts), do: publisher(opts[:name])
+  defp publishers(name, full \\ false) do
+    Peluquera
+    |> Supervisor.which_children()
+    |> Enum.flat_map(fn
+         {mod, _pid, :supervisor, [__MODULE__]} ->
+           case fqname(name) do
+            ^mod -> Supervisor.which_children(mod)
+            _ -> []
+           end
+         _ -> []
+       end)
+    |> Enum.map(fn
+         {mod, _pid, :worker, [Peluquero.Rabbit]} = child ->
+           if full, do: child, else: mod
+         _ -> nil
+       end)
+    |> Enum.reject(& is_nil/1)
+  end
 
-  def publisher(name) when is_atom(name) or is_binary(name),
-    do: Module.concat(fqname(Peluquero.Rabbit, trim(name)), "Worker1")
+  defp publisher(name, number \\ :random)
+  defp publisher(name, :random) do
+    case publishers(name) do
+      [] -> raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
+      list when is_list(list) -> Enum.random(list)
+    end
+  end
+  defp publisher(name, number) when is_integer(number) or is_atom(number),
+    do: publisher(name, Integer.to_string(number))
+  defp publisher(name, number) when is_binary(number) do
+    Enum.find(publishers(name), fn mod ->
+      mod
+      |> to_string()
+      |> String.ends_with?(number)
+    end)
+  end
 
   ##############################################################################
 
@@ -138,6 +172,21 @@ defmodule Peluquero.Peluqueria do
   @doc "Adds a handler to the handlers list"
   def shear!(name \\ nil, payload) do
     :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, payload}) end)
+  end
+
+  @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
+  def shear!(name, queue, exchange, payload) do
+    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, queue, exchange, payload}) end)
+  end
+
+  @doc "Adds a handler to the handlers list"
+  def comb!(name \\ nil, payload) do
+    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, payload}) end)
+  end
+
+  @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
+  def comb!(name, queue, exchange, payload) do
+    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, queue, exchange, payload}) end)
   end
 
   ##############################################################################

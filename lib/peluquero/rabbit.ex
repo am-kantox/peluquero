@@ -58,8 +58,9 @@ defmodule Peluquero.Rabbit do
   def shutdown(name), do: GenServer.cast(fqname(name), :shutdown)
 
   @doc "Publishes the payload to the queue specified"
-  def publish!(name, queue, exchange \\ @exchange, payload),
-    do: GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
+  def publish!(name, queue, exchange \\ @exchange, payload) do
+    GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
+  end
 
   @doc "Publishes the payload to all the subscribers"
   def publish!(name \\ nil, payload) do
@@ -149,6 +150,7 @@ defmodule Peluquero.Rabbit do
   end
 
   def handle_cast({:publish, queue, exchange, payload}, %State{} = state) do
+    Logger.debug(fn -> "[✂] :publish: #{inspect([queue, exchange, payload, state])}" end)
     with {:ok, _q} <- Queue.declare(state.kisser, queue, durable: true, auto_delete: false),
          :ok <- Exchange.declare(state.kisser, exchange),
          :ok <- Queue.bind(state.kisser, queue, exchange) do
@@ -156,14 +158,15 @@ defmodule Peluquero.Rabbit do
       Queue.unbind(state.kisser, queue, exchange)
     else
       _ ->
-        Logger.warn(fn -> "⚑ error publishing #{inspect(payload)} to #{queue}(#{exchange})" end)
+        Logger.warn("⚑ error publishing #{inspect(payload)} to #{queue}(#{exchange})")
     end
 
     {:noreply, state}
   end
 
   def handle_cast({:publish, payload}, %State{} = state) when is_binary(payload) do
-    Enum.each(state.spitters, fn {channel, _queue, exchange} ->
+    Enum.each(state.spitters, fn {channel, queue, exchange} ->
+      Logger.debug(fn -> "[✂] publishing: #{inspect([channel, queue, exchange])}" end)
       Basic.publish(channel, exchange, "", payload)
     end)
 
@@ -179,7 +182,11 @@ defmodule Peluquero.Rabbit do
     exchange = "#{exchange}"
     durable = settings[:durable] == "true" || @durable
     auto_delete = settings[:auto_delete] == "true" || @auto_delete
-    prefetch_count = String.to_integer(settings[:prefetch_count] || @prefetch_count)
+    prefetch_count =
+      case settings[:prefetch_count] || @prefetch_count do
+        b when is_binary(b) -> String.to_integer(b)
+        i when is_integer(i) -> i
+      end
     arguments = extract_arguments(settings)
 
     {direct_or_fanout, queue_params} =
@@ -194,6 +201,7 @@ defmodule Peluquero.Rabbit do
       # set `prefetch_count` param for consumers
       if sucker, do: Basic.qos(channel, prefetch_count: prefetch_count)
 
+      Logger.debug(fn -> "[✂] declare queue: #{inspect([sucker, channel, queue])}" end)
       Queue.declare(
         channel,
         queue,
@@ -245,6 +253,7 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   defp consume(name, channel, tag, redelivered, payload) do
+    Logger.debug(fn -> "[✂] consume: #{inspect([name, channel, tag, redelivered, payload])}" end)
     try do
       name
       |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: @ack_upfront)

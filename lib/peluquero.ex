@@ -96,7 +96,16 @@ defmodule Peluquero do
   use Application
 
   @doc false
+  @spec start(:permanent | :transient | :temporary, start_args :: term) ::
+        {:ok, pid} |
+        {:ok, pid, term} |
+        {:error, reason :: term}
   def start(_type, args) do
+    # Supervisor.start_link(
+    #   Peluquera,
+    #   args,
+    #   strategy: :one_for_one, name: __MODULE__
+    # )
     Peluquera.start_link(args)
   end
 end
