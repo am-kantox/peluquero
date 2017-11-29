@@ -4,6 +4,8 @@ defmodule Peluquero.Peluqueria.Test do
   use ExUnit.Case
   use Peluquero.Tester
 
+  @rabbit_delay 50
+
   # import ExUnit.CaptureIO
 
   setup_all _context do
@@ -35,26 +37,26 @@ defmodule Peluquero.Peluqueria.Test do
 
   test "publish!/2", %{data: data} do
     Peluquero.Peluqueria.publish!(:hairy, data)
-    Process.sleep(500)
+    Process.sleep(@rabbit_delay)
     assert Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
 
   test "shear!/2", %{data: data} do
     Peluquero.Peluqueria.shear!(:shaved, data)
-    Process.sleep(500)
+    Process.sleep(@rabbit_delay)
     assert Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
 
   test "comb!/2", %{data: data} do
     Peluquero.Peluqueria.comb!(:shaved, data)
-    Process.sleep(500)
+    Process.sleep(@rabbit_delay)
     assert not Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
 
   test "scissors!/2", %{data: data} do
     Peluquero.Peluqueria.scissors!(:shaved, {Peluquero.Test.Bucket, :put})
     Peluquero.Peluqueria.shear!(:hairy, data)
-    Process.sleep(500)
+    Process.sleep(@rabbit_delay)
     assert Enum.count(Peluquero.Test.Bucket.state(), fn e -> e == data end) == 2
   end
 end
