@@ -18,7 +18,7 @@ defmodule Peluquero.Mixfile do
   def application do
     [
       extra_applications: [:logger, :amqp],
-      mod: {Peluquero, [name: Application]}
+      mod: {Peluquero, []} # [name: Application]}
     ]
   end
 

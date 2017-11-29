@@ -1,12 +1,10 @@
 use Mix.Config
 
-# p1:  [scissors: [],
-#       rabbits: 1,
-#       consul: "configuration/macroservices_dev/peluquero",
-#       pool: [actors: [size: 50, max_overflow: 100]]],
+config :logger, level: :debug
+
 config :peluquero, :peluquerias,
-  p2: [
-    scissors: [],
+  hairy: [
+    scissors: [{IO, :inspect}],
     rabbits: 2,
     rabbit: [
       host: "localhost",
@@ -15,10 +13,29 @@ config :peluquero, :peluquerias,
       username: "guest",
       virtual_host: "/",
       x_message_ttl: "4000"
+    ],
+    opts: [
+      sources: [
+        fanout: [
+          prefetch_count: 30,
+          queue: "fanout.test-queue"
+        ],
+        direct: [
+          prefetch_count: 30,
+          queue: "direct.test-queue",
+          routing_key: "direct-routing-key",
+          x_max_length: 10_000
+        ]
+      ],
+      destinations: [
+        loop: [
+          queue: "direct.shaved-queue",
+        ]
+      ]
     ]
   ],
-  p3: [
-    scissors: [],
+  shaved: [
+    scissors: [{IO, :inspect}],
     rabbits: 5,
     rabbit: [
       host: "localhost",
@@ -27,6 +44,19 @@ config :peluquero, :peluquerias,
       username: "guest",
       virtual_host: "/",
       x_message_ttl: "4000"
+    ],
+    opts: [
+      sources: [
+        loop: [
+          prefetch_count: 10,
+          queue: "direct.shaved-queue",
+        ]
+      #],
+      #destinations: [
+      #  fanout: [
+      #    queue: "fanout.collect-queue",
+      #  ]
+      ]
     ]
   ]
 

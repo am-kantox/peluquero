@@ -5,6 +5,8 @@ defmodule Peluquero.Peluqueria do
   use Supervisor
   use Peluquero.Namer
 
+  require Logger
+
   @scissors Application.get_env(:peluquero, :scissors, [])
   @rabbits Application.get_env(:peluquero, :rabbits, 1)
   @opts Application.get_env(:peluquero, :opts, [])
@@ -154,13 +156,36 @@ defmodule Peluquero.Peluqueria do
 
   ##############################################################################
 
+  def publisher?(name) do
+    publisher_name = publisher(name)
+
+    existing =
+      Peluquera
+      |> Supervisor.which_children()
+      |> Enum.any?(fn
+          {mod, _pid, :supervisor, [__MODULE__]} ->
+            mod
+            |> Supervisor.which_children()
+            |> Enum.any?(fn
+                 {^publisher_name, _pid, :worker, _} -> true
+                 _ -> false
+               end)
+          _ -> false
+        end)
+
+    unless existing,
+      do: raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
+
+    publisher_name
+  end
+
   # @doc "Publishes a new message to publisher specified by name"
   def publish!(name \\ nil, payload) do
-    Peluquero.Rabbit.publish!(publisher(name), payload)
+    Peluquero.Rabbit.publish!(publisher?(name), payload)
   end
 
   @doc "Publishes a new message to publisher specified by name, queue and exchange"
   def publish!(name, queue, exchange, payload) do
-    Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload)
+    Peluquero.Rabbit.publish!(publisher?(name), queue, exchange, payload)
   end
 end

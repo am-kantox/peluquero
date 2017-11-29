@@ -10,16 +10,20 @@ defmodule Peluquera do
 
   ############################################################################
 
+  @doc false
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts, name: fqname(opts))
   end
 
+  @doc false
   def init(args) do
     peluquerias = Application.get_env(:peluquero, :peluquerias, [])
     peinados = Application.get_env(:peluquero, :peinados, [])
 
     Logger.warn(fn ->
-      "✂ Peluquero started:\n  — peluquerias: #{inspect(peluquerias)}.\n  — peinados: #{
+      "✂ Peluquero started:\n  — peluquerias: #{
+        inspect(peluquerias)
+      }.\n  — peinados: #{
         inspect(peinados)
       }.\n  — args: #{inspect(args)}.\n"
     end)
