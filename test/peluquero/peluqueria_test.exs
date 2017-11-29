@@ -40,9 +40,15 @@ defmodule Peluquero.Peluqueria.Test do
   end
 
   test "shear!/2", %{data: data} do
-    Peluquero.Peluqueria.shear!(:hairy, data)
+    Peluquero.Peluqueria.shear!(:shaved, data)
     Process.sleep(500)
     assert Enum.member?(Peluquero.Test.Bucket.state(), data)
+  end
+
+  test "comb!/2", %{data: data} do
+    Peluquero.Peluqueria.comb!(:shaved, data)
+    Process.sleep(500)
+    assert not Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
 
   test "scissors!/2", %{data: data} do

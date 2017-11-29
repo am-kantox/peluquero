@@ -6,7 +6,14 @@ defmodule Peluquero.Errors.UnknownTarget do
             |> Keyword.keys()
 
   def exception(target: target, reason: reason) do
+    target =
+      case String.Chars.impl_for(target) do
+        nil -> inspect(target)
+        _ -> target
+      end
+
     message = "Target #{target} is unknown. Reason: #{reason}."
+
     %Peluquero.Errors.UnknownTarget{
       message: message,
       target: target,
