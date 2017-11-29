@@ -21,8 +21,8 @@ defmodule Peluquero.Peluqueria.Test do
   test "supervision tree" do
     assert Enum.count(Supervisor.which_children(Peluquera)) == 3
     # assert Enum.count(Supervisor.which_children(Peluquero.Peinados.Procurator)) == 0
-    assert Enum.count(Supervisor.which_children(Peluquero.Peluqueria.Hairy)) == 2 + 2
-    assert Enum.count(Supervisor.which_children(Peluquero.Peluqueria.Shaved)) == 2 + 5
+    assert Enum.count(Supervisor.which_children(Peluquero.Peluqueria.Hairy)) == 2 + 5
+    assert Enum.count(Supervisor.which_children(Peluquero.Peluqueria.Shaved)) == 2 + 1
   end
 
   test "inexisting queue", %{data: data} do

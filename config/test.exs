@@ -5,7 +5,7 @@ config :logger, level: :debug
 config :peluquero, :peluquerias,
   hairy: [
     scissors: [],
-    rabbits: 2,
+    rabbits: 5,
     rabbit: [
       host: "localhost",
       password: "guest",
@@ -36,7 +36,6 @@ config :peluquero, :peluquerias,
   ],
   shaved: [
     scissors: [{Peluquero.Test.Bucket, :put}],
-    rabbits: 5,
     rabbit: [
       host: "localhost",
       password: "guest",
