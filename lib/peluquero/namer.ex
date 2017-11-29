@@ -40,6 +40,12 @@ defmodule Peluquero.Namer do
             |> Module.concat()
 
           fqname(module, suffix)
+        else
+          [module] ->
+            module
+            |> fqname()
+            |> fqparent()
+          [] -> raise(Peluquero.Errors.UnknownTarget, target: [], reason: :empty)
         end
       end
 

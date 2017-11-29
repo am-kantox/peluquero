@@ -126,11 +126,41 @@ defmodule Peluquero.Peluqueria do
   defp actor(opts) when is_list(opts), do: actor(opts[:name])
   defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
 
-  defp publisher(nil), do: Peluquero.Rabbit
-  defp publisher(opts) when is_list(opts), do: publisher(opts[:name])
+  defp publishers(name, full \\ false) do
+    Peluquera
+    |> Supervisor.which_children()
+    |> Enum.flat_map(fn
+         {mod, _pid, :supervisor, [__MODULE__]} ->
+           case fqname(name) do
+            ^mod -> Supervisor.which_children(mod)
+            _ -> []
+           end
+         _ -> []
+       end)
+    |> Enum.map(fn
+         {mod, _pid, :worker, [Peluquero.Rabbit]} = child ->
+           if full, do: child, else: mod
+         _ -> nil
+       end)
+    |> Enum.reject(& is_nil/1)
+  end
 
-  defp publisher(name) when is_atom(name) or is_binary(name),
-    do: Module.concat(fqname(Peluquero.Rabbit, trim(name)), "Worker1")
+  defp publisher(name, number \\ :random)
+  defp publisher(name, :random) do
+    case publishers(name) do
+      [] -> raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
+      list when is_list(list) -> Enum.random(list)
+    end
+  end
+  defp publisher(name, number) when is_integer(number) or is_atom(number),
+    do: publisher(name, Integer.to_string(number))
+  defp publisher(name, number) when is_binary(number) do
+    Enum.find(publishers(name), fn mod ->
+      mod
+      |> to_string()
+      |> String.ends_with?(number)
+    end)
+  end
 
   ##############################################################################
 
@@ -151,36 +181,13 @@ defmodule Peluquero.Peluqueria do
 
   ##############################################################################
 
-  defp publisher?(name) do
-    publisher_name = publisher(name)
-
-    existing =
-      Peluquera
-      |> Supervisor.which_children()
-      |> Enum.any?(fn
-          {mod, _pid, :supervisor, [__MODULE__]} ->
-            mod
-            |> Supervisor.which_children()
-            |> Enum.any?(fn
-                 {^publisher_name, _pid, :worker, _} -> true
-                 _ -> false
-               end)
-          _ -> false
-        end)
-
-    unless existing,
-      do: raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
-
-    publisher_name
-  end
-
   # @doc "Publishes a new message to publisher specified by name"
   def publish!(name \\ nil, payload) do
-    Peluquero.Rabbit.publish!(publisher?(name), payload)
+    Peluquero.Rabbit.publish!(publisher(name), payload)
   end
 
   @doc "Publishes a new message to publisher specified by name, queue and exchange"
   def publish!(name, queue, exchange, payload) do
-    Peluquero.Rabbit.publish!(publisher?(name), queue, exchange, payload)
+    Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload)
   end
 end
