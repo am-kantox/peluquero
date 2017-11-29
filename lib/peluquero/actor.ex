@@ -46,10 +46,21 @@ defmodule Peluquero.Actor do
       Peluquero.Peluqueria.publish!(
         state[:name],
         Enum.reduce(Peluquero.Peluqueria.Chairs.scissors?(state[:name]), payload, fn
-          {mod, fun}, payload -> apply(mod, fun, [payload]) || payload
-          handler, payload when is_function(handler, 1) -> handler.(payload) || payload
+          {mod, fun}, payload ->
+            case apply(mod, fun, [payload]) do
+              :ok -> payload # GenServer.cast
+              nil -> payload # explicitly discarded
+              result -> result
+            end
+          handler, payload when is_function(handler, 1) ->
+            case handler.(payload) do
+              :ok -> payload # GenServer.cast
+              nil -> payload # explicitly discarded
+              result -> result
+            end
           anything, payload ->
             Logger.warn(fn -> "[✂] shear: #{inspect([anything, payload, state])}" end)
+            payload
         end)
       )
 

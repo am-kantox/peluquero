@@ -144,19 +144,14 @@ defmodule Peluquero.Peluqueria do
     :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, payload}) end)
   end
 
-  @doc "Directly publishes a payload to the publisher specified by name"
-  def comb!(name \\ nil, payload) do
-    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, payload}) end)
-  end
-
   @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
-  def comb!(name, queue, exchange, payload) do
+  def shear!(name, queue, exchange, payload) do
     :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, queue, exchange, payload}) end)
   end
 
   ##############################################################################
 
-  def publisher?(name) do
+  defp publisher?(name) do
     publisher_name = publisher(name)
 
     existing =

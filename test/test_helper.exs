@@ -40,8 +40,11 @@ defmodule Peluquero.Test.Bucket do
   @spec state!([any()]) :: any()
   def state!(new_state), do: GenServer.cast(__MODULE__, {:state!, new_state})
 
-  @spec put(term()) :: any()
-  def put(some), do: GenServer.cast(__MODULE__, {:put, some})
+  @spec put(String.t | Map.t) :: any()
+  def put(some) when is_map(some),
+    do: GenServer.cast(__MODULE__, {:put, some})
+  def put(some) when is_binary(some),
+    do: some |> JSON.decode!() |> put()
 
 ##############################################################################
 
