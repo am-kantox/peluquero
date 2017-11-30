@@ -2,7 +2,11 @@
 
 [![Build Status](https://travis-ci.org/am-kantox/peluquero.svg?branch=master)](https://travis-ci.org/am-kantox/peluquero)   **RabbitMQ middleware to plug into exchange chain to transform data**
 
+---
+
 ![Peluquero in a Nutshell](/documentation/peluquero.png?raw=true)
+
+---
 
 **Peluquero** _sp._, [peluˈkeɾo] — the hairstylist. This package got this name
 after what it basically does is shaving off and styling things.
@@ -14,23 +18,68 @@ all the configured destination exchanges.
 The transformer might be either a function of arity `1`, or a tuple of two
 atoms, specifying the module and the function of arity `1` within this module.
 Return value of transformed is used as a new `payload`, unless transformer returns
-`nil`. If this is a case, the `payload` is left intact.
+either `:ok` or `nil`. If this is a case, the `payload` is left intact.
 
-`Peluquero` currently reads all the configuration values from consul. The top
-folder is specified in config and is expected to have following structure:
+`Peluquero` is able to read all the configuration values either from
+[`consul`](https://www.consul.io/) or from `config`. Consul takes a precedence
+when both are specified for the rabbit config.
+
+The configuration should look like:
+
+**config.exs**
+
+```elixir
+config :peluquero, :peluquerias,
+  local: [
+    scissors: [{IO, :inspect}], # functions to apply on input
+    rabbits: 2,                 # amount of rabbit consumers
+    rabbit: [                   # rabbit configuration
+      host: "localhost",
+      password: "guest",
+      port: 5672,
+      username: "guest",
+      virtual_host: "/",
+      x_message_ttl: "4000"
+    ],
+    opts: [                     # might be overwritten by consul
+      sources: [                # source to subscribe to
+        fanout: [
+          prefetch_count: 30,
+          queue: "fanout.queue1"
+        ],
+        direct: [
+          prefetch_count: 30,
+          queue: "direct.queue2",
+          routing_key: "direct-routing-key",
+          x_max_length: 10_000
+        ]
+      ],
+      destinations: [           # where to post processed messages
+        loop: [
+          queue: "direct.queue3",
+        ]
+      ]
+    ]
+  ],
+  remote: [                     # config will be read from consul
+    scissors: [{MyApp.Bucket, :put}],
+    consul: "configuration/my_app/peluquero/rabbits"
+  ]
+]
+```
 
 **consul configuration**
 ```
-configuration/macroservices/peluquero/
+configuration/my_app/peluquero/rabbits
   destinations/
     exchangeY/
       routing_key    ⇒ transformed
     exchangeZ/
   rabbit/
-    host             ⇒ localhost
+    host             ⇒ 10.0.0.0
+    user             ⇒ my_rabbit_user
     password         ⇒ my_rabbit_password
     port             ⇒ 5672
-    user             ⇒ my_rabbit_user
     virtual_host     ⇒ my_virtual_host
     x_message_ttl    ⇒ 4000
   sources/
@@ -91,7 +140,7 @@ below for details.
 def deps do
   [
     ...
-    {:peluquero, "~> 0.5"},
+    {:peluquero, "~> 0.10"},
     ...
   ]
 end
@@ -106,9 +155,20 @@ def applications do
 end
 ```
 
+## Different modes
+
+The easiest way is to start the application as a dependency as shown above.
+The drawback, though, might be that the first messages remain unacked, if
+some functionality from `MyApp` is required (`MyApp` is not still loaded at
+this very moment.)
+
+In that case, one might add `peluquero` in `included_applications` list instead,
+and start it manually. The `Supervisor` to be put into the `MyApp`’s supervision
+tree is named `Peluquera` (note trailing **“a”**!)
+
 ## Usage
 
-`Peluquero` supports running in many different environments (like if we were
+`Peluquero` supports running for many different sources/environments (like if we were
 allowed to run many instances of the same application.) When multiple environments
 are used, they should be referred by name (see `configuration`.)
 
@@ -142,6 +202,15 @@ config :peluquero, :scissors, [{IO, :inspect}]
 ```
 
 ## Changelog
+
+### `0.10.0`
+
+* extensive testing,
+* code formatted by Elixir formatter,
+* `comb!/{2,4}` function to publish to destination queues _without_ shaving,
+* `shear!/{2,4}` to publish to destination queues _with_ shaving applied,
+* `publish!/{2,4}` to publish to destination queues bypassing actors pool
+  (dangerous, not recommended.)
 
 ### `0.7.2`
 
