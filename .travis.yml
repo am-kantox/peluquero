@@ -4,6 +4,9 @@ before_install:
 language: elixir
 elixir:
   - 1.5.0
+otp_release:
+  - "19.0"
+  - "20.0"
 after_script:
   - MIX_ENV=docs mix deps.get
   - MIX_ENV=docs mix inch.report
