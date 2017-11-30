@@ -30,7 +30,8 @@ defmodule Peluquero.Test.Bucket do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def init(_args), do: {:ok, []}
+  def init(_args),
+    do: {:ok, []} |> IO.inspect(label: "⚑ [BUCKET] :: <UP>")
 
 ##############################################################################
 

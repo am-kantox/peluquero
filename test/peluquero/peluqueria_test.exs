@@ -41,8 +41,20 @@ defmodule Peluquero.Peluqueria.Test do
     assert Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
 
+  test "publish!/4", %{data: data} do
+    Peluquero.Peluqueria.publish!(:hairy, "direct.test-queue", "test-fanout", data)
+    Process.sleep(@rabbit_delay)
+    assert not Enum.member?(Peluquero.Test.Bucket.state(), data)
+  end
+
   test "shear!/2", %{data: data} do
     Peluquero.Peluqueria.shear!(:shaved, data)
+    Process.sleep(@rabbit_delay)
+    assert Enum.member?(Peluquero.Test.Bucket.state(), data)
+  end
+
+  test "shear!/4", %{data: data} do
+    Peluquero.Peluqueria.shear!(:shaved, "direct.test-queue", "test-fanout", data)
     Process.sleep(@rabbit_delay)
     assert Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
@@ -53,10 +65,16 @@ defmodule Peluquero.Peluqueria.Test do
     assert not Enum.member?(Peluquero.Test.Bucket.state(), data)
   end
 
+  test "comb!/4", %{data: data} do
+    Peluquero.Peluqueria.comb!(:shaved, "direct.test-queue", "test-fanout", data)
+    Process.sleep(@rabbit_delay)
+    assert not Enum.member?(Peluquero.Test.Bucket.state(), data)
+  end
+
   test "scissors!/2", %{data: data} do
     Peluquero.Peluqueria.scissors!(:shaved, {Peluquero.Test.Bucket, :put})
     Peluquero.Peluqueria.shear!(:hairy, data)
     Process.sleep(@rabbit_delay)
-    assert Enum.count(Peluquero.Test.Bucket.state(), fn e -> e == data end) == 2
+    assert Enum.count(Peluquero.Test.Bucket.state(), fn e -> e == data end) >= 2
   end
 end

@@ -50,7 +50,7 @@ defmodule Peluquero.Rabbit do
   @prefetch_count "50"
   @max_queue_len "100000"
   @durable false
-  @auto_delete true
+  @auto_delete false
   @exchange "amq.fanout"
   @queue "peluquero"
 
@@ -127,7 +127,7 @@ defmodule Peluquero.Rabbit do
     with {channel, _, _} <- State.lookup(state, exchange),
          do: consume(state.name, channel, tag, redelivered, payload)
 
-    {:noreply, %State{} = state}
+    {:noreply, state}
   end
 
   # rabbit went down OR one of child tasks is finished
@@ -150,10 +150,8 @@ defmodule Peluquero.Rabbit do
   end
 
   def handle_cast({:publish, queue, exchange, payload}, %State{} = state) do
-    Logger.debug(fn -> "[✂] :publish: #{inspect([queue, exchange, payload, state])}" end)
-    with {:ok, _q} <- Queue.declare(state.kisser, queue, durable: true, auto_delete: false),
-         :ok <- Exchange.declare(state.kisser, exchange),
-         :ok <- Queue.bind(state.kisser, queue, exchange) do
+    with :ok <- safe_bind(state.kisser, queue, exchange) do
+      Logger.debug(fn -> "[✂] :publish: #{inspect([queue, exchange, payload, state.kisser])}" end)
       Basic.publish(state.kisser, exchange, "", payload)
       Queue.unbind(state.kisser, queue, exchange)
     else
@@ -178,10 +176,23 @@ defmodule Peluquero.Rabbit do
 
   ##############################################################################
 
+  defp safe_bind(chan, queue, exchange) do
+    with :ok <- Exchange.declare(chan, exchange),
+      do: Queue.bind(chan, queue, exchange)
+  end
+
+  defp boolean_setting("true", _default), do: true
+  defp boolean_setting("yes", _default), do: true
+  defp boolean_setting(true, _default), do: true
+  defp boolean_setting("false", _default), do: false
+  defp boolean_setting("no", _default), do: false
+  defp boolean_setting(false, _default), do: false
+  defp boolean_setting(_value, default), do: default
+
   defp init_channel(conn, {exchange, settings}, sucker) do
     exchange = "#{exchange}"
-    durable = settings[:durable] == "true" || @durable
-    auto_delete = settings[:auto_delete] == "true" || @auto_delete
+    durable = boolean_setting(settings[:durable], @durable)
+    auto_delete = boolean_setting(settings[:auto_delete], @auto_delete)
     prefetch_count =
       case settings[:prefetch_count] || @prefetch_count do
         b when is_binary(b) -> String.to_integer(b)
@@ -205,7 +216,7 @@ defmodule Peluquero.Rabbit do
       Queue.declare(
         channel,
         queue,
-        durable: @durable,
+        durable: durable,
         auto_delete: auto_delete,
         arguments: arguments
       )
