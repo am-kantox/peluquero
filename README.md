@@ -1,6 +1,6 @@
-# Peluquero
+# ![Peluquero’s LOGO](/documentation/logo-69x60.png?raw=true)   Peluquero
 
-[![Build Status](https://travis-ci.org/am-kantox/peluquero.svg?branch=master)](https://travis-ci.org/am-kantox/peluquero)   ![Peluquero’s LOGO](/documentation/logo-69x60.png?raw=true)   **RabbitMQ middleware to plug into exchange chain to transform data**
+[![Build Status](https://travis-ci.org/am-kantox/peluquero.svg?branch=master)](https://travis-ci.org/am-kantox/peluquero)   **RabbitMQ middleware to plug into exchange chain to transform data**
 
 ---
 
