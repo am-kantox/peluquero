@@ -201,6 +201,10 @@ config :peluquero, :consul, "configuration/rabbit1"
 config :peluquero, :scissors, [{IO, :inspect}]
 ```
 
+## Processes
+
+![:observer.start](/documentation/observer.png?raw=true)
+
 ## Changelog
 
 ### `0.10.0`
