@@ -44,8 +44,15 @@ defmodule Peluquero.Actor do
   defp smart_payload(:ok, payload), do: payload  # GenServer.cast
   defp smart_payload(nil, payload), do: payload  # explicitly discarded FIXME NEEDED?
   defp smart_payload(%{} = result, _payload), do: result
-  defp smart_payload(garbage, _payload),
-    do: raise(Peluquero.Errors.UnknownTarget, target: garbage, reason: :scissors)
+  defp smart_payload(result, payload) when is_binary(result) do
+    case JSON.decode(result) do
+      {:ok, %{} = decoded} -> decoded
+      {:error, reason} ->
+        raise(Peluquero.Errors.UnknownTarget, target: {result, payload}, reason: reason)
+    end
+  end
+  defp smart_payload(garbage, payload),
+    do: raise(Peluquero.Errors.UnknownTarget, target: {garbage, payload}, reason: :scissors)
 
   defp reduce_payload(name, payload) do
     name
