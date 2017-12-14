@@ -30,6 +30,7 @@ config :peluquero, :peluquerias,
       destinations: [
         loop: [
           queue: "direct.shaved-queue",
+          routing_key: "direct-routing-key"
         ]
       ]
     ]
@@ -49,6 +50,7 @@ config :peluquero, :peluquerias,
         loop: [
           prefetch_count: 10,
           queue: "direct.shaved-queue",
+          routing_key: "direct-routing-key"
         ]
       #],
       #destinations: [

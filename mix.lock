@@ -1,6 +1,6 @@
 %{
-  "amqp": {:hex, :amqp, "0.3.0", "45c26acbc63507e4bf7fe9b2e7e32733dcf478a1695439baedc4690722b652d1", [:mix], [{:amqp_client, "~> 3.6.8", [hex: :amqp_client, optional: false]}, {:rabbit_common, "~> 3.6.8", [hex: :rabbit_common, optional: false]}]},
-  "amqp_client": {:hex, :amqp_client, "3.6.12", "dfdfe7be661feb96ece404092a47431a73797ad412959732d940f96f80290da0", [:make, :rebar3], [{:rabbit_common, "3.6.12", [hex: :rabbit_common, optional: false]}]},
+  "amqp": {:hex, :amqp, "0.3.1", "c22887ff851e57c8012a7b340a9a837ae997ee819079e447222100ef2a1a7735", [:mix], [{:amqp_client, "~> 3.6.14", [hex: :amqp_client, optional: false]}, {:rabbit_common, "~> 3.6.14", [hex: :rabbit_common, optional: false]}, {:recon, "~> 2.3.2", [hex: :recon, optional: false]}]},
+  "amqp_client": {:hex, :amqp_client, "3.6.14", "523c4a84d7cab9ce19e1ba17274c87f10627e6539735c1f26dfe5ce2d5aad75d", [:make, :rebar3], [{:rabbit_common, "3.6.14", [hex: :rabbit_common, optional: false]}]},
   "bunt": {:hex, :bunt, "0.2.0", "951c6e801e8b1d2cbe58ebbd3e616a869061ddadcc4863d0a2182541acae9a38", [:mix], []},
   "certifi": {:hex, :certifi, "1.2.1", "c3904f192bd5284e5b13f20db3ceac9626e14eeacfbb492e19583cf0e37b22be", [:rebar3], []},
   "consul": {:hex, :consul, "1.1.0", "e409bc4e4ef95456a7eb985d831ca6444ec3779b80ca29c0198a20412ea3fa1a", [:mix], [{:exjsx, "~> 3.0", [hex: :exjsx, optional: false]}, {:httpoison, "~> 0.11.0", [hex: :httpoison, optional: false]}]},
@@ -22,7 +22,8 @@
   "mimerl": {:hex, :mimerl, "1.0.2", "993f9b0e084083405ed8252b99460c4f0563e41729ab42d9074fd5e52439be88", [:rebar3], []},
   "mock": {:hex, :mock, "0.3.1", "994f00150f79a0ea50dc9d86134cd9ebd0d177ad60bd04d1e46336cdfdb98ff9", [:mix], [{:meck, "~> 0.8.8", [hex: :meck, optional: false]}]},
   "poolboy": {:hex, :poolboy, "1.5.1", "6b46163901cfd0a1b43d692657ed9d7e599853b3b21b95ae5ae0a777cf9b6ca8", [:rebar], []},
-  "rabbit_common": {:hex, :rabbit_common, "3.6.12", "28dfb9ce4decf64caa9d9e70977ab57af983bc2795fd9db349bfc254a8b45235", [:make, :rebar3], []},
+  "rabbit_common": {:hex, :rabbit_common, "3.6.14", "dc134cd7228f656367e6e6ac88f1f4ef4a63d8a78a2238f52990a4de467708a1", [:make, :rebar3], [{:recon, "2.3.2", [hex: :recon, optional: false]}]},
+  "recon": {:hex, :recon, "2.3.2", "4444c879be323b1b133eec5241cb84bd3821ea194c740d75617e106be4744318", [:rebar3], []},
   "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.1", "28a4d65b7f59893bc2c7de786dec1e1555bd742d336043fe644ae956c3497fbe", [:make, :rebar], []},
   "unicode_util_compat": {:hex, :unicode_util_compat, "0.2.0", "dbbccf6781821b1c0701845eaf966c9b6d83d7c3bfc65ca2b78b88b8678bfa35", [:rebar3], []},
   "yamerl": {:hex, :yamerl, "0.5.0", "6ec55a5d830f6f0d65a4030f5c5db24b0e72b813dfbde32fea44b4951ed9417c", [:rebar3], []},

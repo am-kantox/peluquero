@@ -58,8 +58,8 @@ defmodule Peluquero.Rabbit do
   def shutdown(name), do: GenServer.cast(fqname(name), :shutdown)
 
   @doc "Publishes the payload to the queue specified"
-  def publish!(name, queue, exchange \\ @exchange, payload) do
-    GenServer.cast(fqname(name), {:publish, queue, exchange, payload})
+  def publish!(name, queue, exchange \\ @exchange, payload, routing_key \\ "") do
+    GenServer.cast(fqname(name), {:publish, queue, exchange, payload, routing_key})
   end
 
   @doc "Publishes the payload to all the subscribers"
@@ -146,13 +146,14 @@ defmodule Peluquero.Rabbit do
     end)
 
     Channel.close(state.kisser)
+
     {:noreply, %State{}}
   end
 
-  def handle_cast({:publish, queue, exchange, payload}, %State{} = state) do
+  def handle_cast({:publish, queue, exchange, payload, routing_key}, %State{} = state) do
     with :ok <- safe_bind(state.kisser, queue, exchange) do
       Logger.debug(fn -> "[✂] :publish: #{inspect([queue, exchange, payload, state.kisser])}" end)
-      Basic.publish(state.kisser, exchange, "", payload)
+      Basic.publish(state.kisser, exchange, routing_key, payload)
       Queue.unbind(state.kisser, queue, exchange)
     else
       _ ->
@@ -164,8 +165,9 @@ defmodule Peluquero.Rabbit do
 
   def handle_cast({:publish, payload}, %State{} = state) when is_binary(payload) do
     Enum.each(state.spitters, fn {channel, queue, exchange} ->
-      Logger.debug(fn -> "[✂] publishing: #{inspect([channel, queue, exchange])}" end)
-      Basic.publish(channel, exchange, "", payload)
+      Logger.debug(fn -> "[✂] publish: #{inspect([channel, queue, exchange, state])}" end)
+      routing_key = state.opts[:destinations][String.to_existing_atom(exchange)][:routing_key]
+      Basic.publish(channel, exchange, routing_key, payload)
     end)
 
     {:noreply, state}
@@ -201,10 +203,13 @@ defmodule Peluquero.Rabbit do
     arguments = extract_arguments(settings)
 
     {direct_or_fanout, queue_params} =
-      if settings[:routing_key] do
-        {:direct, [routing_key: settings[:routing_key]]}
-      else
-        {:fanout, []}
+      case Enum.map([settings[:type], settings[:routing_key]], &to_string/1) do
+        ["fanout", ""] -> {:fanout, []}
+        ["fanout", _] -> {:fanout, [routing_key: settings[:routing_key]]}
+        ["direct", ""] -> {:direct, []}
+        ["direct", _] -> {:direct, [routing_key: settings[:routing_key]]}
+        [_, ""] -> {:fanout, []}
+        [_, _] -> {:direct, [routing_key: settings[:routing_key]]}
       end
 
     with {:ok, channel} <- Channel.open(conn),
