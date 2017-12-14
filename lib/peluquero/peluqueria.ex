@@ -26,6 +26,12 @@ defmodule Peluquero.Peluqueria do
       GenServer.call(fqname(__MODULE__, name), {:scissors, fun})
     end
 
+    @doc "Removes the middleware from the middlewares list"
+    @spec blunt!(String.t | Atom.t, Integer.t) :: [Atom.t]
+    def blunt!(name \\ nil, count \\ 0) do
+      GenServer.call(fqname(__MODULE__, name), {:blunt, count})
+    end
+
     @doc "Retrieves a list of middlewares"
     @spec scissors?(String.t | Atom.t) :: [Function.t | Tuple.t]
     def scissors?(name \\ nil) do
@@ -34,15 +40,28 @@ defmodule Peluquero.Peluqueria do
 
     ############################################################################
 
-    def start_link(opts \\ []) do
+    def start_link(opts \\ []) when is_list(opts) do
       GenServer.start_link(__MODULE__, opts[:scissors] || [], name: fqname(opts))
     end
 
     def init(args), do: {:ok, args}
 
-    def handle_call(:shavery, _from, state), do: {:reply, state, state}
+    def handle_call(:shavery, _from, state),
+      do: {:reply, state, state}
 
-    def handle_call({:scissors, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
+    def handle_call({:scissors, fun}, _from, state),
+      do: {:reply, :ok, state ++ [fun]}
+
+    def handle_call({:blunt, count}, _from, state) when count == 0,
+      do: {:reply, state, []}
+
+    def handle_call({:blunt, count}, _from, state) when count > 0,
+      do: with {result, state} <- Enum.split(state, count),
+        do: {:reply, result, state}
+
+    def handle_call({:blunt, count}, _from, state) when count < 0,
+      do: with {result, state} <- Enum.split(:lists.reverse(state), count),
+        do: {:reply, :lists.reverse(result), :lists.reverse(state)}
   end
 
   ##############################################################################
@@ -175,8 +194,10 @@ defmodule Peluquero.Peluqueria do
   end
 
   @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
-  def shear!(name, queue, exchange, payload) do
-    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, queue, exchange, payload}) end)
+  def shear!(name, queue, exchange, payload, routing_key \\ "") do
+    :poolboy.transaction(actor(name), fn pid ->
+      GenServer.call(pid, {:shear, queue, exchange, payload, routing_key})
+    end)
   end
 
   @doc "Adds a handler to the handlers list"
@@ -185,8 +206,10 @@ defmodule Peluquero.Peluqueria do
   end
 
   @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
-  def comb!(name, queue, exchange, payload) do
-    :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, queue, exchange, payload}) end)
+  def comb!(name, queue, exchange, payload, routing_key \\ "") do
+    :poolboy.transaction(actor(name), fn pid ->
+      GenServer.call(pid, {:comb, queue, exchange, payload, routing_key})
+    end)
   end
 
   ##############################################################################
@@ -197,7 +220,7 @@ defmodule Peluquero.Peluqueria do
   end
 
   @doc "Publishes a new message to publisher specified by name, queue and exchange"
-  def publish!(name, queue, exchange, payload) do
-    Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload)
+  def publish!(name, queue, exchange, payload, routing_key \\ "") do
+    Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload, routing_key)
   end
 end

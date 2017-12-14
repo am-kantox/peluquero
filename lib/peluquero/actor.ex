@@ -79,10 +79,10 @@ defmodule Peluquero.Actor do
     {:reply, response, state}
   end
 
-  def handle_call({:shear, queue, exchange, payload}, _from, state) do
+  def handle_call({:shear, queue, exchange, payload, routing_key}, _from, state) do
     response =
       Peluquero.Peluqueria.publish!(
-        state[:name], queue, exchange, reduce_payload(state[:name], payload)
+        state[:name], queue, exchange, reduce_payload(state[:name], payload), routing_key
       )
 
     {:reply, response, state}
@@ -95,9 +95,9 @@ defmodule Peluquero.Actor do
     {:reply, response, state}
   end
 
-  def handle_call({:comb, queue, exchange, payload}, _from, state) do
+  def handle_call({:comb, queue, exchange, payload, routing_key}, _from, state) do
     response =
-      Peluquero.Peluqueria.publish!(state[:name], queue, exchange, payload)
+      Peluquero.Peluqueria.publish!(state[:name], queue, exchange, payload, routing_key)
 
     {:reply, response, state}
   end
