@@ -21,9 +21,7 @@ defmodule Peluquera do
     peinados = Application.get_env(:peluquero, :peinados, [])
 
     Logger.warn(fn ->
-      "✂ Peluquero started:\n  — peluquerias: #{
-        inspect(peluquerias)
-      }.\n  — peinados: #{
+      "✂ Peluquero started:\n  — peluquerias: #{inspect(peluquerias)}.\n  — peinados: #{
         inspect(peinados)
       }.\n  — args: #{inspect(args)}.\n"
     end)

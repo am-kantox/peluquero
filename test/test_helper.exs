@@ -15,25 +15,24 @@ defmodule Peluquero.Tester do
 end
 
 defmodule Peluquero.Test.Bucket do
-@moduledoc """
-  The `Bucket` server implementation
-"""
+  @moduledoc """
+    The `Bucket` server implementation
+  """
 
   use GenServer
 
   require Logger
 
-##############################################################################
+  ##############################################################################
 
   @doc "Starts the `Bucket` server up"
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
 
-  def init(_args),
-    do: {:ok, []} |> IO.inspect(label: "⚑ [BUCKET] :: <UP>")
+  def init(_args), do: {:ok, []} |> IO.inspect(label: "⚑ [BUCKET] :: <UP>")
 
-##############################################################################
+  ##############################################################################
 
   @spec state() :: any()
   def state(), do: GenServer.call(__MODULE__, :state)
@@ -41,13 +40,11 @@ defmodule Peluquero.Test.Bucket do
   @spec state!([any()]) :: any()
   def state!(new_state), do: GenServer.cast(__MODULE__, {:state!, new_state})
 
-  @spec put(String.t | Map.t) :: any()
-  def put(some) when is_map(some),
-    do: GenServer.cast(__MODULE__, {:put, some})
-  def put(some) when is_binary(some),
-    do: some |> JSON.decode!() |> put()
+  @spec put(String.t() | Map.t()) :: any()
+  def put(some) when is_map(some), do: GenServer.cast(__MODULE__, {:put, some})
+  def put(some) when is_binary(some), do: some |> JSON.decode!() |> put()
 
-##############################################################################
+  ##############################################################################
 
   @doc false
   def handle_call(:state, _from, state), do: {:reply, state, state}

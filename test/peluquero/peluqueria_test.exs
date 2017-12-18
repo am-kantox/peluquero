@@ -28,11 +28,9 @@ defmodule Peluquero.Peluqueria.Test do
   end
 
   test "inexisting queue", %{data: data} do
-    assert_raise(
-      Peluquero.Errors.UnknownTarget,
-      fn ->
-        Peluquero.Peluqueria.publish!(:local, data)
-      end)
+    assert_raise(Peluquero.Errors.UnknownTarget, fn ->
+      Peluquero.Peluqueria.publish!(:local, data)
+    end)
   end
 
   test "publish!/2", %{data: data} do

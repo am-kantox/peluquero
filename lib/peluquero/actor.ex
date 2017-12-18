@@ -41,16 +41,22 @@ defmodule Peluquero.Actor do
 
   ##############################################################################
 
-  defp smart_payload(:ok, payload), do: payload  # GenServer.cast
-  defp smart_payload(nil, payload), do: payload  # explicitly discarded FIXME NEEDED?
+  # GenServer.cast
+  defp smart_payload(:ok, payload), do: payload
+  # explicitly discarded FIXME NEEDED?
+  defp smart_payload(nil, payload), do: payload
   defp smart_payload(%{} = result, _payload), do: result
+
   defp smart_payload(result, payload) when is_binary(result) do
     case JSON.decode(result) do
-      {:ok, %{} = decoded} -> decoded
+      {:ok, %{} = decoded} ->
+        decoded
+
       {:error, reason} ->
         raise(Peluquero.Errors.UnknownTarget, target: {result, payload}, reason: reason)
     end
   end
+
   defp smart_payload(garbage, payload),
     do: raise(Peluquero.Errors.UnknownTarget, target: {garbage, payload}, reason: :scissors)
 
@@ -58,22 +64,24 @@ defmodule Peluquero.Actor do
     name
     |> Peluquero.Peluqueria.Chairs.scissors?()
     |> Enum.reduce(payload, fn
-      {mod, fun}, payload ->
-        mod
-        |> apply(fun, [payload])
-        |> smart_payload(payload)
-      handler, payload when is_function(handler, 1) ->
-        handler.(payload)
-        |> smart_payload(payload)
-      anything, _payload ->
-        raise(Peluquero.Errors.UnknownTarget, target: anything, reason: :scissors_settings)
-    end)
+         {mod, fun}, payload ->
+           mod
+           |> apply(fun, [payload])
+           |> smart_payload(payload)
+
+         handler, payload when is_function(handler, 1) ->
+           smart_payload(handler.(payload), payload)
+
+         anything, _payload ->
+           raise(Peluquero.Errors.UnknownTarget, target: anything, reason: :scissors_settings)
+       end)
   end
 
   def handle_call({:shear, payload}, _from, state) do
     response =
       Peluquero.Peluqueria.publish!(
-        state[:name], reduce_payload(state[:name], payload)
+        state[:name],
+        reduce_payload(state[:name], payload)
       )
 
     {:reply, response, state}
@@ -82,22 +90,24 @@ defmodule Peluquero.Actor do
   def handle_call({:shear, queue, exchange, payload, routing_key}, _from, state) do
     response =
       Peluquero.Peluqueria.publish!(
-        state[:name], queue, exchange, reduce_payload(state[:name], payload), routing_key
+        state[:name],
+        queue,
+        exchange,
+        reduce_payload(state[:name], payload),
+        routing_key
       )
 
     {:reply, response, state}
   end
 
   def handle_call({:comb, payload}, _from, state) do
-    response =
-      Peluquero.Peluqueria.publish!(state[:name], payload)
+    response = Peluquero.Peluqueria.publish!(state[:name], payload)
 
     {:reply, response, state}
   end
 
   def handle_call({:comb, queue, exchange, payload, routing_key}, _from, state) do
-    response =
-      Peluquero.Peluqueria.publish!(state[:name], queue, exchange, payload, routing_key)
+    response = Peluquero.Peluqueria.publish!(state[:name], queue, exchange, payload, routing_key)
 
     {:reply, response, state}
   end

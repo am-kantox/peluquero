@@ -45,7 +45,9 @@ defmodule Peluquero.Namer do
             module
             |> fqname()
             |> fqparent()
-          [] -> raise(Peluquero.Errors.UnknownTarget, target: [], reason: :empty)
+
+          [] ->
+            raise(Peluquero.Errors.UnknownTarget, target: [], reason: :empty)
         end
       end
 

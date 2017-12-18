@@ -97,9 +97,9 @@ defmodule Peluquero do
 
   @doc false
   @spec start(:permanent | :transient | :temporary, start_args :: term) ::
-        {:ok, pid} |
-        {:ok, pid, term} |
-        {:error, reason :: term}
+          {:ok, pid}
+          | {:ok, pid, term}
+          | {:error, reason :: term}
   def start(_type, args) do
     # Supervisor.start_link(
     #   Peluquera,

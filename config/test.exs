@@ -52,11 +52,11 @@ config :peluquero, :peluquerias,
           queue: "direct.shaved-queue",
           routing_key: "direct-routing-key"
         ]
-      #],
-      #destinations: [
-      #  fanout: [
-      #    queue: "fanout.collect-queue",
-      #  ]
+        # ],
+        # destinations: [
+        #  fanout: [
+        #    queue: "fanout.collect-queue",
+        #  ]
       ]
     ]
   ]

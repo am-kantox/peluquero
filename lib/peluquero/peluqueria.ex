@@ -21,19 +21,19 @@ defmodule Peluquero.Peluqueria do
     use Peluquero.Namer
 
     @doc "Adds a middleware to the middlewares list"
-    @spec scissors!(String.t | Atom.t, Function.t | Tuple.t) :: any()
+    @spec scissors!(String.t() | Atom.t(), Function.t() | Tuple.t()) :: any()
     def scissors!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
       GenServer.call(fqname(__MODULE__, name), {:scissors, fun})
     end
 
     @doc "Removes the middleware from the middlewares list"
-    @spec blunt!(String.t | Atom.t, Integer.t) :: [Atom.t]
+    @spec blunt!(String.t() | Atom.t(), Integer.t()) :: [Atom.t()]
     def blunt!(name \\ nil, count \\ 0) do
       GenServer.call(fqname(__MODULE__, name), {:blunt, count})
     end
 
     @doc "Retrieves a list of middlewares"
-    @spec scissors?(String.t | Atom.t) :: [Function.t | Tuple.t]
+    @spec scissors?(String.t() | Atom.t()) :: [Function.t() | Tuple.t()]
     def scissors?(name \\ nil) do
       GenServer.call(fqname(__MODULE__, name), :shavery)
     end
@@ -46,22 +46,21 @@ defmodule Peluquero.Peluqueria do
 
     def init(args), do: {:ok, args}
 
-    def handle_call(:shavery, _from, state),
-      do: {:reply, state, state}
+    def handle_call(:shavery, _from, state), do: {:reply, state, state}
 
-    def handle_call({:scissors, fun}, _from, state),
-      do: {:reply, :ok, state ++ [fun]}
+    def handle_call({:scissors, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
 
-    def handle_call({:blunt, count}, _from, state) when count == 0,
-      do: {:reply, state, []}
+    def handle_call({:blunt, count}, _from, state) when count == 0, do: {:reply, state, []}
 
     def handle_call({:blunt, count}, _from, state) when count > 0,
-      do: with {result, state} <- Enum.split(state, count),
-        do: {:reply, result, state}
+      do: with({result, state} <- Enum.split(state, count), do: {:reply, result, state})
 
     def handle_call({:blunt, count}, _from, state) when count < 0,
-      do: with {result, state} <- Enum.split(:lists.reverse(state), count),
-        do: {:reply, :lists.reverse(result), :lists.reverse(state)}
+      do:
+        with(
+          {result, state} <- Enum.split(:lists.reverse(state), count),
+          do: {:reply, :lists.reverse(result), :lists.reverse(state)}
+        )
   end
 
   ##############################################################################
@@ -151,28 +150,35 @@ defmodule Peluquero.Peluqueria do
     |> Enum.flat_map(fn
          {mod, _pid, :supervisor, [__MODULE__]} ->
            case fqname(name) do
-            ^mod -> Supervisor.which_children(mod)
-            _ -> []
+             ^mod -> Supervisor.which_children(mod)
+             _ -> []
            end
-         _ -> []
+
+         _ ->
+           []
        end)
     |> Enum.map(fn
          {mod, _pid, :worker, [Peluquero.Rabbit]} = child ->
            if full, do: child, else: mod
-         _ -> nil
+
+         _ ->
+           nil
        end)
-    |> Enum.reject(& is_nil/1)
+    |> Enum.reject(&is_nil/1)
   end
 
   defp publisher(name, number \\ :random)
+
   defp publisher(name, :random) do
     case publishers(name) do
       [] -> raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
       list when is_list(list) -> Enum.random(list)
     end
   end
+
   defp publisher(name, number) when is_integer(number) or is_atom(number),
     do: publisher(name, Integer.to_string(number))
+
   defp publisher(name, number) when is_binary(number) do
     Enum.find(publishers(name), fn mod ->
       mod

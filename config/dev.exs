@@ -29,7 +29,7 @@ config :peluquero, :peluquerias,
       ],
       destinations: [
         loop: [
-          queue: "direct.shaved-queue",
+          queue: "direct.shaved-queue"
         ]
       ]
     ]
@@ -49,13 +49,13 @@ config :peluquero, :peluquerias,
       sources: [
         loop: [
           prefetch_count: 10,
-          queue: "direct.shaved-queue",
+          queue: "direct.shaved-queue"
         ]
-      #],
-      #destinations: [
-      #  fanout: [
-      #    queue: "fanout.collect-queue",
-      #  ]
+        # ],
+        # destinations: [
+        #  fanout: [
+        #    queue: "fanout.collect-queue",
+        #  ]
       ]
     ]
   ]

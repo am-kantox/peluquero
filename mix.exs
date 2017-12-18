@@ -5,7 +5,7 @@ defmodule Peluquero.Mixfile do
   def project do
     [
       app: :peluquero,
-      version: "0.99.0",
+      version: "0.99.1",
       elixir: "~> 1.5",
       start_permanent: Mix.env() == :prod,
       description: description(),
@@ -18,7 +18,8 @@ defmodule Peluquero.Mixfile do
   def application do
     [
       extra_applications: [:logger, :amqp],
-      mod: {Peluquero, []} # [name: Application]}
+      # [name: Application]}
+      mod: {Peluquero, []}
     ]
   end
 

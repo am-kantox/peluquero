@@ -72,14 +72,16 @@ defmodule Peluquero.Rabbit do
   def init(%State{} = state) do
     state = %State{
       state
-      | suckers: Keyword.merge(
-          state.opts[:sources] || [],
-          connection_details(state.consul, :sources)
-        ),
-        spitters: Keyword.merge(
-          state.opts[:destinations] || [],
-          connection_details(state.consul, :destinations)
-        )
+      | suckers:
+          Keyword.merge(
+            state.opts[:sources] || [],
+            connection_details(state.consul, :sources)
+          ),
+        spitters:
+          Keyword.merge(
+            state.opts[:destinations] || [],
+            connection_details(state.consul, :destinations)
+          )
     }
 
     rabbit_connect(state)
@@ -179,8 +181,7 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   defp safe_bind(chan, queue, exchange) do
-    with :ok <- Exchange.declare(chan, exchange),
-      do: Queue.bind(chan, queue, exchange)
+    with :ok <- Exchange.declare(chan, exchange), do: Queue.bind(chan, queue, exchange)
   end
 
   defp boolean_setting("true", _default), do: true
@@ -191,26 +192,30 @@ defmodule Peluquero.Rabbit do
   defp boolean_setting(false, _default), do: false
   defp boolean_setting(_value, default), do: default
 
+  defp split_queue_params("fanout", ""), do: {:fanout, []}
+  defp split_queue_params(["fanout", routing_key]), do: {:fanout, [routing_key: routing_key]}
+  defp split_queue_params(["direct", ""]), do: {:direct, []}
+  defp split_queue_params(["direct", routing_key]), do: {:direct, [routing_key: routing_key]}
+  defp split_queue_params([_, ""]), do: {:fanout, []}
+  defp split_queue_params([_, routing_key]), do: {:direct, [routing_key: routing_key]}
+
   defp init_channel(conn, {exchange, settings}, sucker) do
     exchange = "#{exchange}"
     durable = boolean_setting(settings[:durable], @durable)
     auto_delete = boolean_setting(settings[:auto_delete], @auto_delete)
+
     prefetch_count =
       case settings[:prefetch_count] || @prefetch_count do
         b when is_binary(b) -> String.to_integer(b)
         i when is_integer(i) -> i
       end
+
     arguments = extract_arguments(settings)
 
     {direct_or_fanout, queue_params} =
-      case Enum.map([settings[:type], settings[:routing_key]], &to_string/1) do
-        ["fanout", ""] -> {:fanout, []}
-        ["fanout", _] -> {:fanout, [routing_key: settings[:routing_key]]}
-        ["direct", ""] -> {:direct, []}
-        ["direct", _] -> {:direct, [routing_key: settings[:routing_key]]}
-        [_, ""] -> {:fanout, []}
-        [_, _] -> {:direct, [routing_key: settings[:routing_key]]}
-      end
+      [settings[:type], settings[:routing_key]]
+      |> Enum.map(&to_string/1)
+      |> split_queue_params()
 
     with {:ok, channel} <- Channel.open(conn),
          queue <- settings[:queue] || exchange <> "." <> @queue <> "." <> nodes_hash() do
@@ -218,6 +223,7 @@ defmodule Peluquero.Rabbit do
       if sucker, do: Basic.qos(channel, prefetch_count: prefetch_count)
 
       Logger.debug(fn -> "[✂] declare queue: #{inspect([sucker, channel, queue])}" end)
+
       Queue.declare(
         channel,
         queue,
@@ -270,9 +276,10 @@ defmodule Peluquero.Rabbit do
 
   defp consume(name, channel, tag, redelivered, payload) do
     Logger.debug(fn -> "[✂] consume: #{inspect([name, channel, tag, redelivered, payload])}" end)
+
     try do
       name
-      |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: @ack_upfront)
+      |> handle_message_chain({channel, tag, redelivered}, payload, ack_upfront: @ack_upfront)
       |> Enum.each(fn {mod, fun, args} -> Kernel.apply(mod, fun, args) end)
 
       Logger.debug(fn ->
@@ -291,16 +298,16 @@ defmodule Peluquero.Rabbit do
     end
   end
 
-  defp handle_message_chain(name, channel, tag, _redelivered, payload, ack_upfront: true) do
+  defp handle_message_chain(name, {channel, tag, _redelivered}, payload, ack_upfront: true) do
     [
       {Task, :async, [Basic, :ack, [channel, tag]]},
       {Peluquero.Peluqueria, :shear!, [name, payload]}
     ]
   end
 
-  defp handle_message_chain(name, channel, tag, redelivered, payload, ack_upfront: false) do
+  defp handle_message_chain(name, {channel, tag, redelivered}, payload, ack_upfront: false) do
     name
-    |> handle_message_chain(channel, tag, redelivered, payload, ack_upfront: true)
+    |> handle_message_chain({channel, tag, redelivered}, payload, ack_upfront: true)
     |> :lists.reverse()
   end
 
