@@ -4,15 +4,17 @@ defmodule Peluquero.Namer do
     quote bind_quoted: [prefix: opts[:module]] do
       @module_prefix prefix
 
-      @spec fqname(Atom.t(), String.t() | Atom.t() | List.t() | nil) :: Atom.t()
+      @spec fqname(atom(), binary() | atom() | list() | nil) :: atom()
+      @doc false
       def fqname(module \\ @module_prefix || __MODULE__, suffix)
+      @doc false
       def fqname(module, nil), do: module
-
+      @doc false
       def fqname(module, suffix) when is_atom(suffix),
         do: fqname(module, suffix |> Atom.to_string() |> String.trim_leading("Elixir."))
-
+      @doc false
       def fqname(module, suffix) when is_list(suffix), do: fqname(module, suffix[:name])
-
+      @doc false
       def fqname(module, suffix) when is_binary(suffix) do
         to_trim =
           module
@@ -29,9 +31,10 @@ defmodule Peluquero.Namer do
         Module.concat([module | modules])
       end
 
-      @spec fqparent(Atom.t() | String.t() | List.t()) :: Atom.t()
+      @spec fqparent(atom() | binary() | list()) :: atom()
+      @doc false
       def fqparent(name)
-
+      @doc false
       def fqparent(name) when is_list(name) do
         with [_, suffix | h] <- :lists.reverse(name) do
           module =
@@ -50,13 +53,13 @@ defmodule Peluquero.Namer do
             raise(Peluquero.Errors.UnknownTarget, target: [], reason: :empty)
         end
       end
-
+      @doc false
       def fqparent(name) when is_binary(name) do
         name
         |> String.split(".")
         |> fqparent()
       end
-
+      @doc false
       def fqparent(name) when is_atom(name) do
         name
         |> Atom.to_string()

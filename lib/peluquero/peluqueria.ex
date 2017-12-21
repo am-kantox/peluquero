@@ -15,46 +15,52 @@ defmodule Peluquero.Peluqueria do
   @pool Application.get_env(:peluquero, :pool, [])
 
   defmodule Chairs do
-    @moduledoc false
+    @moduledoc """
+    Internally used module to maintain a list of middlewares used to shave
+      inputs. `Peluquero.scissors!/2` calls this module to add the middleware.
+    `Peluquero.blunt!/2` can be used to remove the middleware(s).
+    """
 
     use GenServer
     use Peluquero.Namer
 
     @doc "Adds a middleware to the middlewares list"
-    @spec scissors!(String.t() | Atom.t(), Function.t() | Tuple.t()) :: any()
+    @spec scissors!(binary() | atom(), (any() -> any()) | tuple()) :: any()
     def scissors!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
       GenServer.call(fqname(__MODULE__, name), {:scissors, fun})
     end
 
     @doc "Removes the middleware from the middlewares list"
-    @spec blunt!(String.t() | Atom.t(), Integer.t()) :: [Atom.t()]
+    @spec blunt!(binary() | atom(), integer()) :: [atom()]
     def blunt!(name \\ nil, count \\ 0) do
       GenServer.call(fqname(__MODULE__, name), {:blunt, count})
     end
 
     @doc "Retrieves a list of middlewares"
-    @spec scissors?(String.t() | Atom.t()) :: [Function.t() | Tuple.t()]
+    @spec scissors?(binary() | atom()) :: [(any() -> any()) | tuple()]
     def scissors?(name \\ nil) do
       GenServer.call(fqname(__MODULE__, name), :shavery)
     end
 
     ############################################################################
 
+    @spec start_link(list()) :: {:ok, pid()}
+    @doc false
     def start_link(opts \\ []) when is_list(opts) do
       GenServer.start_link(__MODULE__, opts[:scissors] || [], name: fqname(opts))
     end
 
+    @spec init(list()) :: {:ok, list()}
+    @doc false
     def init(args), do: {:ok, args}
 
+    @spec handle_call(any(), any(), list()) :: {:reply, list(), list()}
+    @doc false
     def handle_call(:shavery, _from, state), do: {:reply, state, state}
-
     def handle_call({:scissors, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
-
     def handle_call({:blunt, count}, _from, state) when count == 0, do: {:reply, state, []}
-
     def handle_call({:blunt, count}, _from, state) when count > 0,
       do: with({result, state} <- Enum.split(state, count), do: {:reply, result, state})
-
     def handle_call({:blunt, count}, _from, state) when count < 0,
       do:
         with(
@@ -65,10 +71,13 @@ defmodule Peluquero.Peluqueria do
 
   ##############################################################################
 
+  @spec start_link(list()) :: {:ok, pid()}
+  @doc false
   def start_link(opts \\ []) do
     Supervisor.start_link(__MODULE__, opts, name: fqname(opts))
   end
 
+  @doc false
   def init(opts) do
     pool =
       Keyword.merge([actors: [size: 5, max_overflow: 10], type: :local], opts[:pool] || @pool)
@@ -167,39 +176,41 @@ defmodule Peluquero.Peluqueria do
     |> Enum.reject(&is_nil/1)
   end
 
+  @spec publisher(atom() | binary(), integer() | atom() | binary()) :: atom()
   defp publisher(name, number \\ :random)
-
   defp publisher(name, :random) do
     case publishers(name) do
       [] -> raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
       list when is_list(list) -> Enum.random(list)
     end
   end
-
-  defp publisher(name, number) when is_integer(number) or is_atom(number),
-    do: publisher(name, Integer.to_string(number))
-
-  defp publisher(name, number) when is_binary(number) do
-    Enum.find(publishers(name), fn mod ->
-      mod
-      |> to_string()
-      |> String.ends_with?(number)
-    end)
-  end
+  # two functions below are not used anywhere
+  # defp publisher(name, number) when is_integer(number) or is_atom(number),
+  #   do: publisher(name, Integer.to_string(number))
+  # defp publisher(name, number) when is_binary(number) do
+  #   Enum.find(publishers(name), fn mod ->
+  #     mod
+  #     |> to_string()
+  #     |> String.ends_with?(number)
+  #   end)
+  # end
 
   ##############################################################################
 
   @doc "Adds a middleware to the middlewares list"
-  def scissors!(name \\ nil, fun) when is_function(fun, 1) or is_tuple(fun) do
-    Peluquero.Peluqueria.Chairs.scissors!(name, fun)
-  end
+  defdelegate scissors!(name \\ nil, fun), to: Peluquero.Peluqueria.Chairs
+
+  @doc "Removes the middleware from the middlewares list"
+  defdelegate blunt!(name \\ nil, count \\ 0), to: Peluquero.Peluqueria.Chairs
 
   @doc "Adds a handler to the handlers list"
+  @spec shear!(nil | binary(), any()) :: :ok
   def shear!(name \\ nil, payload) do
     :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:shear, payload}) end)
   end
 
   @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
+  @spec shear!(nil | binary(), binary(), binary(), any(), binary()) :: :ok
   def shear!(name, queue, exchange, payload, routing_key \\ "") do
     :poolboy.transaction(actor(name), fn pid ->
       GenServer.call(pid, {:shear, queue, exchange, payload, routing_key})
@@ -207,11 +218,13 @@ defmodule Peluquero.Peluqueria do
   end
 
   @doc "Adds a handler to the handlers list"
+  @spec comb!(nil | binary(), any()) :: :ok
   def comb!(name \\ nil, payload) do
     :poolboy.transaction(actor(name), fn pid -> GenServer.call(pid, {:comb, payload}) end)
   end
 
   @doc "Directly publishes a payload to the publisher specified by name, queue and exchange"
+  @spec comb!(nil | binary(), binary(), binary(), any(), binary()) :: :ok
   def comb!(name, queue, exchange, payload, routing_key \\ "") do
     :poolboy.transaction(actor(name), fn pid ->
       GenServer.call(pid, {:comb, queue, exchange, payload, routing_key})
@@ -221,11 +234,13 @@ defmodule Peluquero.Peluqueria do
   ##############################################################################
 
   # @doc "Publishes a new message to publisher specified by name"
+  @spec publish!(nil | binary(), any()) :: :ok
   def publish!(name \\ nil, payload) do
     Peluquero.Rabbit.publish!(publisher(name), payload)
   end
 
   @doc "Publishes a new message to publisher specified by name, queue and exchange"
+  @spec publish!(nil | binary(), binary(), binary(), any(), binary()) :: :ok
   def publish!(name, queue, exchange, payload, routing_key \\ "") do
     Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload, routing_key)
   end
