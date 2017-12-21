@@ -192,7 +192,7 @@ defmodule Peluquero.Rabbit do
   defp boolean_setting(false, _default), do: false
   defp boolean_setting(_value, default), do: default
 
-  defp split_queue_params("fanout", ""), do: {:fanout, []}
+  defp split_queue_params(["fanout", ""]), do: {:fanout, []}
   defp split_queue_params(["fanout", routing_key]), do: {:fanout, [routing_key: routing_key]}
   defp split_queue_params(["direct", ""]), do: {:direct, []}
   defp split_queue_params(["direct", routing_key]), do: {:direct, [routing_key: routing_key]}
