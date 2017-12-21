@@ -59,8 +59,10 @@ defmodule Peluquero.Peluqueria do
     def handle_call(:shavery, _from, state), do: {:reply, state, state}
     def handle_call({:scissors, fun}, _from, state), do: {:reply, :ok, state ++ [fun]}
     def handle_call({:blunt, count}, _from, state) when count == 0, do: {:reply, state, []}
+
     def handle_call({:blunt, count}, _from, state) when count > 0,
       do: with({result, state} <- Enum.split(state, count), do: {:reply, result, state})
+
     def handle_call({:blunt, count}, _from, state) when count < 0,
       do:
         with(
@@ -178,12 +180,14 @@ defmodule Peluquero.Peluqueria do
 
   @spec publisher(atom() | binary(), integer() | atom() | binary()) :: atom()
   defp publisher(name, number \\ :random)
+
   defp publisher(name, :random) do
     case publishers(name) do
       [] -> raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
       list when is_list(list) -> Enum.random(list)
     end
   end
+
   # two functions below are not used anywhere
   # defp publisher(name, number) when is_integer(number) or is_atom(number),
   #   do: publisher(name, Integer.to_string(number))

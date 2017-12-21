@@ -12,6 +12,7 @@ defmodule Peluquero.Namer do
       @doc false
       def fqname(module, suffix) when is_atom(suffix),
         do: fqname(module, suffix |> Atom.to_string() |> String.trim_leading("Elixir."))
+
       @doc false
       def fqname(module, suffix) when is_list(suffix), do: fqname(module, suffix[:name])
       @doc false
@@ -53,12 +54,14 @@ defmodule Peluquero.Namer do
             raise(Peluquero.Errors.UnknownTarget, target: [], reason: :empty)
         end
       end
+
       @doc false
       def fqparent(name) when is_binary(name) do
         name
         |> String.split(".")
         |> fqparent()
       end
+
       @doc false
       def fqparent(name) when is_atom(name) do
         name
