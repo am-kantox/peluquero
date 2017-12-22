@@ -15,6 +15,7 @@
   "hackney": {:hex, :hackney, "1.8.6", "21a725db3569b3fb11a6af17d5c5f654052ce9624219f1317e8639183de4a423", [:rebar3], [{:certifi, "1.2.1", [hex: :certifi, optional: false]}, {:idna, "5.0.2", [hex: :idna, optional: false]}, {:metrics, "1.0.1", [hex: :metrics, optional: false]}, {:mimerl, "1.0.2", [hex: :mimerl, optional: false]}, {:ssl_verify_fun, "1.1.1", [hex: :ssl_verify_fun, optional: false]}]},
   "httpoison": {:hex, :httpoison, "0.11.2", "9e59f17a473ef6948f63c51db07320477bad8ba88cf1df60a3eee01150306665", [:mix], [{:hackney, "~> 1.8.0", [hex: :hackney, optional: false]}]},
   "idna": {:hex, :idna, "5.0.2", "ac203208ada855d95dc591a764b6e87259cb0e2a364218f215ad662daa8cd6b4", [:rebar3], [{:unicode_util_compat, "0.2.0", [hex: :unicode_util_compat, optional: false]}]},
+  "jason": {:hex, :jason, "1.0.0-rc.1", "c8421d4e6e6ef0dd7c2b64ff63589f8561116808fa003dddfd5360cde7bb4625", [:mix], [{:decimal, "~> 1.0", [hex: :decimal, optional: true]}]},
   "json": {:hex, :json, "1.0.2", "fa75ed4f355cd4ab468c25588171f8002a7274d3d5fb376c18822ddfc7c33f1f", [:mix], []},
   "jsx": {:hex, :jsx, "2.8.2", "7acc7d785b5abe8a6e9adbde926a24e481f29956dd8b4df49e3e4e7bcc92a018", [:mix, :rebar3], []},
   "meck": {:hex, :meck, "0.8.8", "eeb3efe811d4346e1a7f65b2738abc2ad73cbe1a2c91b5dd909bac2ea0414fa6", [:rebar3], []},

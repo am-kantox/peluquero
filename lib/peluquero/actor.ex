@@ -48,7 +48,7 @@ defmodule Peluquero.Actor do
   defp smart_payload(%{} = result, _payload), do: result
 
   defp smart_payload(result, payload) when is_binary(result) do
-    case JSON.decode(result) do
+    case Jason.decode(result) do
       {:ok, %{} = decoded} ->
         decoded
 

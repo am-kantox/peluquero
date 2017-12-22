@@ -59,7 +59,7 @@ defmodule Peluquero.Utils do
   def safe(value) when is_integer(value), do: Integer.to_string(value)
   def safe(value) when is_float(value), do: Float.to_string(value)
   def safe(value) when is_atom(value), do: Atom.to_string(value)
-  def safe(value), do: JSON.encode!(value)
+  def safe(value), do: Jason.encode!(value)
 
   ##############################################################################
 

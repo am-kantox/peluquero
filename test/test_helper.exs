@@ -42,7 +42,7 @@ defmodule Peluquero.Test.Bucket do
 
   @spec put(String.t() | Map.t()) :: any()
   def put(some) when is_map(some), do: GenServer.cast(__MODULE__, {:put, some})
-  def put(some) when is_binary(some), do: some |> JSON.decode!() |> put()
+  def put(some) when is_binary(some), do: some |> Jason.decode!() |> put()
 
   ##############################################################################
 

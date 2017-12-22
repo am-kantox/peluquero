@@ -176,7 +176,7 @@ defmodule Peluquero.Rabbit do
   end
 
   def handle_cast({:publish, payload}, %State{} = state),
-    do: handle_cast({:publish, JSON.encode!(payload)}, state)
+    do: handle_cast({:publish, Jason.encode!(payload)}, state)
 
   ##############################################################################
 
