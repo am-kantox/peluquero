@@ -14,6 +14,8 @@ jobs:
 
     working_directory: ~/repo.lib_lat_lon
     steps:
+      - run: sudo apt-get update && sudo apt-get install -y rabbitmq-server
+
       - checkout
 
       - run: mix local.hex --force
