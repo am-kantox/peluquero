@@ -14,7 +14,10 @@ jobs:
 
     working_directory: ~/repo.lib_lat_lon
     steps:
-      - run: sudo apt-get update && sudo apt-get install -y rabbitmq-server
+      - run: echo "deb https://dl.bintray.com/rabbitmq/debian jessie main" | sudo tee /etc/apt/sources.list.d/bintray.rabbitmq.list
+      - run: wget -O- https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc | sudo apt-key add -
+      - run: sudo apt-get update
+      - run: sudo apt-get install -y rabbitmq-server
 
       - checkout
 
