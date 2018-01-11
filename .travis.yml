@@ -3,7 +3,8 @@ before_install:
   - sudo apt-get install -qq rabbitmq-server
 language: elixir
 elixir:
-  - 1.5.0
+  - 1.5.2
+  - 1.6.0-rc1
 otp_release:
   - "19.0"
   - "20.0"
