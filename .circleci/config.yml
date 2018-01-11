@@ -14,6 +14,7 @@ jobs:
 
     working_directory: ~/repo.lib_lat_lon
     steps:
+      - run: sudo apt-get install apt-transport-https
       - run: echo "deb https://dl.bintray.com/rabbitmq/debian jessie main" > debian-jessie-main.list
       - run: sudo tee /etc/apt/sources.list.d/bintray.rabbitmq.list < debian-jessie-main.list
       - run: wget "https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc"
