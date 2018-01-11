@@ -20,7 +20,7 @@ jobs:
       - run: wget "https://dl.bintray.com/rabbitmq/Keys/rabbitmq-release-signing-key.asc"
       - run: sudo apt-key add rabbitmq-release-signing-key.asc
       - run: sudo apt-get update
-      - run: sudo apt-get install -y rabbitmq-server
+      - run: sudo apt-get install -y rabbitmq-server erlang-nox
 
       - checkout
 
