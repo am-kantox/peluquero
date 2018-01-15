@@ -2,14 +2,19 @@ defmodule Peluquero.Mixfile do
   @moduledoc false
   use Mix.Project
 
+  @app :peluquero
+  @app_name "Peluquero"
+  @version "0.99.4"
+
   def project do
     [
-      app: :peluquero,
-      version: "0.99.3",
+      app: @app,
+      version: @version,
       elixir: "~> 1.5",
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
+      docs: docs(),
       deps: deps()
     ]
   end
@@ -33,7 +38,7 @@ defmodule Peluquero.Mixfile do
       {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
       {:consul, "~> 1.1"},
-      {:httpoison, "~> 0.9"},
+      {:httpoison, "~> 0.9 or ~> 1.0"},
       {:yaml_elixir, "~> 1.0"},
       {:jason, "~> 1.0-rc"},
 
@@ -61,9 +66,33 @@ defmodule Peluquero.Mixfile do
       maintainers: ["Aleksei Matiushkin"],
       licenses: ["MIT"],
       links: %{
-        "GitHub" => "https://github.com/am-kantox/peluquero",
-        "Docs" => "https://hexdocs.pm/peluquero"
+        "GitHub" => "https://github.com/am-kantox/#{@app}",
+        "Docs" => "https://hexdocs.pm/#{@app}"
       }
+    ]
+  end
+
+  defp docs() do
+    [
+      main: @app_name,
+      source_ref: "v#{@version}",
+      canonical: "http://hexdocs.pm/#{@app}",
+      logo: "documentation/logo-69x60.png",
+      source_url: "https://github.com/am-kantox/#{@app}",
+      extras: [
+        "documentation/intro.md"
+      ],
+      groups_for_modules: [
+        # Peluquero
+
+        "Entry points": [
+          Peluquero,
+          Peluquera
+        ],
+        "Exceptions": [
+          Peluquero.Errors.UnknownTarget
+        ]
+      ]
     ]
   end
 end
