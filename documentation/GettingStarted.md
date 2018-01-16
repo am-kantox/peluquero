@@ -59,7 +59,7 @@ The code needed to accomplish this task: **none**. Config is enough. Yay.
 `Peluquero` allows to config/tune up nearly everything, through config file.
 Also, instead of storing the configuration in the file near the source code,
 one might use [`Consul`](https://consul.io/) to store configuration.
-See  `Intro` for the config details.
+See  [`Intro`](intro.html) for the config details.
 
 Also, `Peluquero` allows to add/remove scissors (functions used to “shave”
 the input to produce the output) on the fly. Scissors are stored as a `FILO`

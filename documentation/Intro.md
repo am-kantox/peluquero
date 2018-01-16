@@ -22,7 +22,7 @@ when both are specified for the rabbit config.
 
 ## Getting Started
 
-### See `GettingStarted`.
+### See [`Getting Started`](gettingstarted.html).
 
 ## Configuration
 
