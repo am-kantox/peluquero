@@ -75,7 +75,7 @@ defmodule Peluquero.Mixfile do
   defp docs() do
     [
       # main: @app_name,
-      main: "Intro",
+      main: "intro",
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/#{@app}",
       logo: "documentation/logo-69x60.png",
