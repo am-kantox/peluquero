@@ -3,7 +3,7 @@ defmodule Peluquero.Mixfile do
   use Mix.Project
 
   @app :peluquero
-  @app_name "Peluquero"
+  # @app_name "Peluquero"
   @version "0.99.5"
 
   def project do
