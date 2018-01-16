@@ -4,7 +4,7 @@ defmodule Peluquero.Mixfile do
 
   @app :peluquero
   @app_name "Peluquero"
-  @version "0.99.4"
+  @version "0.99.5"
 
   def project do
     [
@@ -74,13 +74,15 @@ defmodule Peluquero.Mixfile do
 
   defp docs() do
     [
-      main: @app_name,
+      # main: @app_name,
+      main: "Intro",
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/#{@app}",
       logo: "documentation/logo-69x60.png",
       source_url: "https://github.com/am-kantox/#{@app}",
       extras: [
-        "documentation/intro.md"
+        "documentation/Intro.md",
+        "documentation/GettingStarted.md"
       ],
       groups_for_modules: [
         # Peluquero
@@ -88,6 +90,12 @@ defmodule Peluquero.Mixfile do
         "Entry points": [
           Peluquero,
           Peluquera
+        ],
+        "Internals": [
+          Peluquero.Peinados,
+          Peluquero.Peluqueria,
+          Peluquero.Peluqueria.Chairs,
+          Peluquero.Utils
         ],
         "Exceptions": [
           Peluquero.Errors.UnknownTarget

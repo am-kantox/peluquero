@@ -1,6 +1,6 @@
 ## Peluquero in a Nutshell
 
-![Peluquero in a Nutshell](/documentation/peluquero.png?raw=true)
+![Peluquero in a Nutshell](https://github.com/am-kantox/peluquero/blob/master/documentation/peluquero.png?raw=true)
 
 ## Intro
 
@@ -19,6 +19,10 @@ either `:ok` or `nil`. If this is a case, the `payload` is left intact.
 `Peluquero` is able to read all the configuration values either from
 [`consul`](https://www.consul.io/) or from `config`. Consul takes a precedence
 when both are specified for the rabbit config.
+
+## Getting Started
+
+### See `GettingStarted`.
 
 ## Configuration
 
