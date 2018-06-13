@@ -77,8 +77,7 @@ defmodule Peluquero.Redis do
         host: redis[:host],
         port: String.to_integer(redis[:port]),
         db: String.to_integer(redis[:database]),
-        # redis.pwd,
-        password: "",
+        password: redis[:password] || "",
         reconnect: :no_reconnect,
         max_queue: :infinity,
         behaviour: :drop
