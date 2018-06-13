@@ -4,7 +4,7 @@ defmodule Peluquero.Mixfile do
 
   @app :peluquero
   # @app_name "Peluquero"
-  @version "0.99.5"
+  @version "0.99.7"
 
   def project do
     [
@@ -39,13 +39,14 @@ defmodule Peluquero.Mixfile do
       {:poolboy, "~> 1.5"},
       {:consul, "~> 1.1"},
       {:httpoison, "~> 0.9 or ~> 1.0"},
-      {:yaml_elixir, "~> 1.0"},
-      {:jason, "~> 1.0-rc"},
+      {:yaml_elixir, "~> 2.0"},
+      {:jason, "~> 1.0"},
 
-      {:credo, "~> 0.8.10", only: [:dev, :test]},
+      {:credo, "~> 0.8", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev},
-      {:mock, "~> 0.3", only: :test}
+      {:mock, "~> 0.3", only: :test},
+      {:stream_data, "~> 0.4", only: :test}
     ]
   end
 
