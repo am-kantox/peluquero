@@ -159,22 +159,22 @@ defmodule Peluquero.Peluqueria do
     Peluquera
     |> Supervisor.which_children()
     |> Enum.flat_map(fn
-         {mod, _pid, :supervisor, [__MODULE__]} ->
-           case fqname(name) do
-             ^mod -> Supervisor.which_children(mod)
-             _ -> []
-           end
+      {mod, _pid, :supervisor, [__MODULE__]} ->
+        case fqname(name) do
+          ^mod -> Supervisor.which_children(mod)
+          _ -> []
+        end
 
-         _ ->
-           []
-       end)
+      _ ->
+        []
+    end)
     |> Enum.map(fn
-         {mod, _pid, :worker, [Peluquero.Rabbit]} = child ->
-           if full, do: child, else: mod
+      {mod, _pid, :worker, [Peluquero.Rabbit]} = child ->
+        if full, do: child, else: mod
 
-         _ ->
-           nil
-       end)
+      _ ->
+        nil
+    end)
     |> Enum.reject(&is_nil/1)
   end
 

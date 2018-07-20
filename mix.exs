@@ -4,7 +4,7 @@ defmodule Peluquero.Mixfile do
 
   @app :peluquero
   # @app_name "Peluquero"
-  @version "0.99.7"
+  @version "0.99.8"
 
   def project do
     [
@@ -34,14 +34,13 @@ defmodule Peluquero.Mixfile do
       {:gen_stage, "~> 0.11"},
       {:rabbit_common, "~> 3.6"},
       {:amqp_client, "~> 3.6"},
-      {:amqp, "~> 0.2"},
+      {:amqp, "~> 0.2 or ~> 1.0"},
       {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
       {:consul, "~> 1.1"},
-      {:httpoison, "~> 0.9 or ~> 1.0"},
+      {:httpoison, "~> 0.9 or ~> 1.2"},
       {:yaml_elixir, "~> 2.0"},
       {:jason, "~> 1.0"},
-
       {:credo, "~> 0.8", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev},
@@ -92,13 +91,13 @@ defmodule Peluquero.Mixfile do
           Peluquero,
           Peluquera
         ],
-        "Internals": [
+        Internals: [
           Peluquero.Peinados,
           Peluquero.Peluqueria,
           Peluquero.Peluqueria.Chairs,
           Peluquero.Utils
         ],
-        "Exceptions": [
+        Exceptions: [
           Peluquero.Errors.UnknownTarget
         ]
       ]

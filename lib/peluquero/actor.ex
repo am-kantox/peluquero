@@ -64,17 +64,17 @@ defmodule Peluquero.Actor do
     name
     |> Peluquero.Peluqueria.Chairs.scissors?()
     |> Enum.reduce(payload, fn
-         {mod, fun}, payload ->
-           mod
-           |> apply(fun, [payload])
-           |> smart_payload(payload)
+      {mod, fun}, payload ->
+        mod
+        |> apply(fun, [payload])
+        |> smart_payload(payload)
 
-         handler, payload when is_function(handler, 1) ->
-           smart_payload(handler.(payload), payload)
+      handler, payload when is_function(handler, 1) ->
+        smart_payload(handler.(payload), payload)
 
-         anything, _payload ->
-           raise(Peluquero.Errors.UnknownTarget, target: anything, reason: :scissors_settings)
-       end)
+      anything, _payload ->
+        raise(Peluquero.Errors.UnknownTarget, target: anything, reason: :scissors_settings)
+    end)
   end
 
   def handle_call({:shear, payload}, _from, state) do

@@ -16,18 +16,18 @@ defmodule Peluquero.Peinados do
       peinados
       |> Enum.with_index()
       |> Enum.map(fn {peinado, idx} ->
-           {name, settings} =
-             case peinado do
-               {name, settings} -> {name, settings}
-               name -> {name, []}
-             end
+        {name, settings} =
+          case peinado do
+            {name, settings} -> {name, settings}
+            name -> {name, []}
+          end
 
-           worker(
-             Peluquero.Redis,
-             [[name: name, consul: settings[:consul] || @consul, opts: settings]],
-             id: Module.concat(fqname(Peluquero.Redis, name), "Worker#{idx}")
-           )
-         end)
+        worker(
+          Peluquero.Redis,
+          [[name: name, consul: settings[:consul] || @consul, opts: settings]],
+          id: Module.concat(fqname(Peluquero.Redis, name), "Worker#{idx}")
+        )
+      end)
 
     supervise(children, strategy: :one_for_one)
   end

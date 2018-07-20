@@ -24,21 +24,21 @@ defmodule Peluquero.Utils do
 
   0..@max_match
   |> Enum.each(fn n ->
-       @n n
-       def consul_key_type(<<
-             key::binary-size(unquote(@n)),
-             unquote(@joiner)::binary,
-             rest::binary
-           >>) do
-         case String.reverse(rest) do
-           "" -> {:plain, :bag, key}
-           <<@joiner::binary, _::binary>> -> {:nested, :bag, key}
-           _ -> {:nested, :item, key}
-         end
-       end
+    @n n
+    def consul_key_type(<<
+          key::binary-size(unquote(@n)),
+          unquote(@joiner)::binary,
+          rest::binary
+        >>) do
+      case String.reverse(rest) do
+        "" -> {:plain, :bag, key}
+        <<@joiner::binary, _::binary>> -> {:nested, :bag, key}
+        _ -> {:nested, :item, key}
+      end
+    end
 
-       def consul_key_type(<<rest::binary-size(unquote(@n + 1))>>), do: {:plain, :item, rest}
-     end)
+    def consul_key_type(<<rest::binary-size(unquote(@n + 1))>>), do: {:plain, :item, rest}
+  end)
 
   def consul_key_type(key) when is_binary(key) do
     {type, rest} =
@@ -80,19 +80,19 @@ defmodule Peluquero.Utils do
         |> Enum.map(fn <<_::binary-size(size), @joiner::binary, key::binary>> -> key end)
         |> Enum.filter(&(&1 != ""))
         |> Enum.map(fn key ->
-             case Peluquero.Utils.consul_key_type(key) do
-               {:nested, _, _} ->
-                 nil
+          case Peluquero.Utils.consul_key_type(key) do
+            {:nested, _, _} ->
+              nil
 
-               {:plain, :bag, rest} ->
-                 {String.to_atom(rest), consul(path, key)}
+            {:plain, :bag, rest} ->
+              {String.to_atom(rest), consul(path, key)}
 
-               {:plain, :item, _} ->
-                 with %HTTPoison.Response{body: [%{"Value" => value}]} <-
-                        Consul.Kv.fetch!("#{path}#{@joiner}#{key}"),
-                      do: {String.to_atom(key), value}
-             end
-           end)
+            {:plain, :item, _} ->
+              with %HTTPoison.Response{body: [%{"Value" => value}]} <-
+                     Consul.Kv.fetch!("#{path}#{@joiner}#{key}"),
+                   do: {String.to_atom(key), value}
+          end
+        end)
         |> Enum.filter(&(not is_nil(&1)))
         |> Enum.into([])
 

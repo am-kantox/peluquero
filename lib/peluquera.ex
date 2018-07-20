@@ -22,9 +22,8 @@ defmodule Peluquera do
 
     Logger.warn(fn ->
       "✂ Peluquero started:\n" <>
-      "   — peluquerias: #{inspect(peluquerias)}.\n" <>
-      "   — peinados: #{inspect(peinados)}.\n" <>
-      "   — args: #{inspect(args)}.\n\n"
+        "   — peluquerias: #{inspect(peluquerias)}.\n" <>
+        "   — peinados: #{inspect(peinados)}.\n" <> "   — args: #{inspect(args)}.\n\n"
     end)
 
     amqps =
