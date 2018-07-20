@@ -39,6 +39,8 @@ defmodule Peluquera do
     Supervisor.init([redises | amqps], opts)
   end
 
+  def suicide, do: GenServer.cast(__MODULE__, :suicide)
+
   ##############################################################################
 
   defp spec_for_peluqueria({name, settings}) do
@@ -58,4 +60,9 @@ defmodule Peluquera do
       type: :supervisor
     }
   end
+
+  def handle_cast(:suicide, _state) do
+    raise("❤ planned crash to reinit rabbits")
+  end
+
 end

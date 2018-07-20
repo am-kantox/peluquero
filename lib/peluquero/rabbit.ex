@@ -134,7 +134,7 @@ defmodule Peluquero.Rabbit do
 
   # rabbit went down OR one of child tasks is finished
   def handle_info({:DOWN, _, :process, pid, _reason}, %State{} = state) do
-    if State.known?(state, pid), do: raise("❤ planned crash to reinit rabbits")
+    if State.known?(state, pid), do: Peluquera.suicide()
     {:noreply, state}
   end
 
