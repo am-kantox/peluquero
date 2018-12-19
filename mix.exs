@@ -4,13 +4,13 @@ defmodule Peluquero.Mixfile do
 
   @app :peluquero
   # @app_name "Peluquero"
-  @version "0.99.8"
+  @version "0.99.9"
 
   def project do
     [
       app: @app,
       version: @version,
-      elixir: "~> 1.5",
+      elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
@@ -31,17 +31,17 @@ defmodule Peluquero.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:gen_stage, "~> 0.11"},
-      {:rabbit_common, "~> 3.6"},
-      {:amqp_client, "~> 3.6"},
-      {:amqp, "~> 0.2 or ~> 1.0"},
+      {:gen_stage, "~> 0.14"},
+      {:rabbit_common, "~> 3.7"},
+      {:amqp_client, "~> 3.7"},
+      {:amqp, "~> 1.0 or ~> 1.1"},
       {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
       {:consul, "~> 1.1"},
       {:httpoison, "~> 0.9 or ~> 1.2"},
       {:yaml_elixir, "~> 2.0"},
       {:jason, "~> 1.0"},
-      {:credo, "~> 0.8", only: [:dev, :test]},
+      {:credo, "~> 1.0", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:ex_doc, "~> 0.11", only: :dev},
       {:mock, "~> 0.3", only: :test},
