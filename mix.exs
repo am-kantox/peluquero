@@ -35,6 +35,7 @@ defmodule Peluquero.Mixfile do
       {:rabbit_common, "~> 3.7"},
       {:amqp_client, "~> 3.7"},
       {:amqp, "~> 1.0 or ~> 1.1"},
+      {:ranch_proxy_protocol, "~> 1.3 or ~> 2.0", override: true},
       {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
       {:consul, "~> 1.1"},
