@@ -74,7 +74,7 @@ defmodule Peluquero.Utils do
 
     size = String.length(path)
 
-    case Consul.Kv.keys(path) do
+    case apply(Consul.Kv, :keys, [path]) do
       {:ok, %HTTPoison.Response{body: keys}} when is_list(keys) ->
         keys
         |> Enum.map(fn <<_::binary-size(size), @joiner::binary, key::binary>> -> key end)
@@ -89,7 +89,7 @@ defmodule Peluquero.Utils do
 
             {:plain, :item, _} ->
               with %HTTPoison.Response{body: [%{"Value" => value}]} <-
-                     Consul.Kv.fetch!("#{path}#{@joiner}#{key}"),
+                     apply(Consul.Kv, :fetch!, ["#{path}#{@joiner}#{key}"]),
                    do: {String.to_atom(key), value}
           end
         end)
