@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :logger, level: :debug
+config :logger, level: :info
 
 config :peluquero, :peluquerias,
   hairy: [
@@ -28,15 +28,17 @@ config :peluquero, :peluquerias,
         ]
       ],
       destinations: [
-        loop: [
-          queue: "direct.shaved-queue"
-        ]
+        # loop: [
+        #   queue: "direct.shaved-queue",
+        #   x_max_length: 10_000,
+        #   durable: false
+        # ]
       ]
     ]
   ],
   shaved: [
-    scissors: [{IO, :inspect}],
-    rabbits: 5,
+    scissors: [],
+    rabbits: 42,
     rabbit: [
       host: "localhost",
       password: "guest",
@@ -47,15 +49,25 @@ config :peluquero, :peluquerias,
     ],
     opts: [
       sources: [
-        loop: [
-          prefetch_count: 10,
-          queue: "direct.shaved-queue"
-        ]
-        # ],
-        # destinations: [
-        #  fanout: [
-        #    queue: "fanout.collect-queue",
+        #  loop: [
+        #    prefetch_count: 10,
+        #    queue: "direct.shaved-queue"
+        #    x_max_length: 10_000,
+        #    durable: false
         #  ]
+        shaved: [
+          queue: "direct.shaved-queue",
+          routing_key: "direct-routing-key",
+          x_max_length: 10_000,
+          durable: false
+        ]
+      ],
+      destinations: [
+        copy_shaved: [
+          queue: "direct.collect-queue",
+          routing_key: "direct-routing-key",
+          x_max_length: 10_000
+        ]
       ]
     ]
   ]
@@ -64,4 +76,4 @@ config :peluquero, :peinados, []
 #   eventory: [consul: "configuration/macroservices_dev/redis"]
 # ]
 
-config :peluquero, :pool, actors: [size: 8, max_overflow: 100]
+config :peluquero, :pool, actors: [size: 100, max_overflow: 200]

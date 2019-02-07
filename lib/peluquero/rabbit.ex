@@ -141,6 +141,8 @@ defmodule Peluquero.Rabbit do
   ##############################################################################
 
   def handle_cast(:shutdown, %State{} = state) do
+    Logger.warn("[SHUTDOWN] " <> inspect(state))
+
     Enum.each(state.suckers ++ state.spitters, fn {channel, queue, exchange} ->
       Queue.unbind(channel, queue, exchange)
       Queue.delete(channel, queue)
@@ -153,16 +155,20 @@ defmodule Peluquero.Rabbit do
   end
 
   def handle_cast({:publish, queue, exchange, payload, routing_key}, %State{} = state) do
-    with :ok <- safe_bind(state.kisser, queue, exchange) do
-      Logger.debug(fn -> "[✂] :publish: #{inspect([queue, exchange, payload, state.kisser])}" end)
-      Basic.publish(state.kisser, exchange, routing_key, payload)
-      Queue.unbind(state.kisser, queue, exchange)
-    else
-      _ ->
-        Logger.warn("⚑ error publishing #{inspect(payload)} to #{queue}(#{exchange})")
-    end
+    Logger.debug(fn ->
+      "[✂] publish directly to queue: #{inspect([queue, exchange, payload, state.kisser])}"
+    end)
 
-    {:noreply, state}
+    with {:error, reason} <- Basic.publish(state.kisser, exchange, routing_key, payload) do
+      Logger.warn(fn ->
+        "⚑ error publishing #{inspect(payload)} to #{queue}(#{exchange}), reason: #{reason}"
+      end)
+
+      :ok = safe_bind(state.kisser, queue, exchange)
+      handle_cast({:publish, queue, exchange, payload, routing_key}, state)
+    else
+      _ -> {:noreply, state}
+    end
   end
 
   def handle_cast({:publish, payload}, %State{} = state) when is_binary(payload) do
