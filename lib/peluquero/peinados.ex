@@ -5,8 +5,6 @@ defmodule Peluquero.Peinados do
   use Supervisor
   use Peluquero.Namer
 
-  @consul Application.get_env(:peinado, :consul, nil)
-
   def start_link(peinados \\ []) do
     Supervisor.start_link(__MODULE__, peinados, name: __MODULE__)
   end
@@ -24,7 +22,14 @@ defmodule Peluquero.Peinados do
 
         worker(
           Peluquero.Redis,
-          [[name: name, consul: settings[:consul] || @consul, opts: settings]],
+          [
+            [
+              name: name,
+              consul: settings[:consul],
+              redis_config: settings[:redis],
+              opts: settings
+            ]
+          ],
           id: Module.concat(fqname(Peluquero.Redis, name), "Worker#{idx}")
         )
       end)

@@ -7,6 +7,7 @@ defmodule Peluquero.Rabbit do
               opts: [],
               consul: nil,
               rabbit: nil,
+              redis: nil,
               suckers: [],
               spitters: [],
               kisser: nil
@@ -321,30 +322,34 @@ defmodule Peluquero.Rabbit do
 
   defp connection_params(%State{rabbit: rabbit}) when not is_nil(rabbit), do: rabbit
 
-  defp connection_params(%State{consul: consul}) when not is_nil(consul) do
-    case Peluquero.Utils.consul(consul, ~w|rabbit|) do
-      [] ->
-        []
+  if Code.ensure_compiled?(Consul.Kv) do
+    defp connection_params(%State{consul: consul}) when not is_nil(consul) do
+      case Peluquero.Utils.consul(consul, ~w|rabbit|) do
+        [] ->
+          []
 
-      rabbit ->
-        [
-          host: rabbit[:host],
-          port: String.to_integer(rabbit[:port]),
-          virtual_host: rabbit[:virtual_host],
-          username: rabbit[:user],
-          password: rabbit[:password]
-        ]
+        rabbit ->
+          [
+            host: rabbit[:host],
+            port: String.to_integer(rabbit[:port]),
+            virtual_host: rabbit[:virtual_host],
+            username: rabbit[:user],
+            password: rabbit[:password]
+          ]
+      end
     end
   end
 
   defp connection_params(_) do
-    raise "Either consul or rabbit must be set in config.exs"
+    raise "Either consul [deprecated] or rabbit must be set in config.exs"
   end
 
   defp connection_details(nil, _), do: []
 
-  defp connection_details(consul, type) do
-    Peluquero.Utils.consul(consul, Atom.to_string(type))
+  if Code.ensure_compiled?(Consul.Kv) do
+    defp connection_details(consul, type) do
+      Peluquero.Utils.consul(consul, Atom.to_string(type))
+    end
   end
 
   defp nodes_hash() do

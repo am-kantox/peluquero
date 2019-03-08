@@ -3,6 +3,8 @@ defmodule Peluquero.Redis do
 
   use GenServer
 
+  @reconnect_sleep 5
+
   use Peluquero.Namer
   require Logger
 
@@ -18,13 +20,23 @@ defmodule Peluquero.Redis do
 
   def start_link(opts), do: GenServer.start_link(__MODULE__, opts, name: fqname(opts))
 
-  def init(opts), do: {:ok, [name: opts[:name], redis: redis_connect(opts[:name], opts[:consul])]}
+  defp redis!(opts) do
+    if is_nil(opts[:consul]) do
+      redis_connect(:redis, opts[:name], opts[:redis_config])
+    else
+      redis_connect(:consul, opts[:name], opts[:consul])
+    end
+  end
+
+  def init(opts) do
+    {:ok, [name: opts[:name], redis: redis!(opts)]}
+  end
 
   def shutdown, do: GenServer.cast(__MODULE__, :shutdown)
 
   def handle_info({:DOWN, _, :process, _pid, reason}, state) do
     Logger.log(:info, "⇑ reconnecting after ⇓ for #{inspect(reason)} reason")
-    {:noreply, Keyword.merge(state, redis: redis_connect(state[:name], state[:consul]))}
+    {:noreply, Keyword.merge(state, redis: redis!(state))}
   end
 
   def handle_cast(:shutdown, state) do
@@ -49,14 +61,14 @@ defmodule Peluquero.Redis do
 
   ##############################################################################
 
-  defp redis_connect(name, consul) do
-    conn_params = connection_params(consul, name)
+  defp redis_connect(config_from, name, consul_or_params) do
+    conn_params = connection_params(config_from, consul_or_params, name)
 
     case Exredis.start_link(conn_params) do
       {:ok, client} ->
         Logger.log(
           :warn,
-          ~s|★ Redis: [name: :#{name}, consul: "#{consul}", redis: #{inspect(client)}]|
+          ~s|★ Redis: [name: :#{name}, redis: #{inspect(client)}]|
         )
 
         client
@@ -65,23 +77,37 @@ defmodule Peluquero.Redis do
         # Reconnection loop
         Logger.log(:warn, "⇓ redis™ error, reason: #{inspect(reason)}")
         Process.sleep(1_000)
-        redis_connect(name, consul)
+        redis_connect(config_from, name, consul_or_params)
     end
   end
 
   ##############################################################################
 
-  defp connection_params(consul, name) do
-    with redis <- Peluquero.Utils.consul(consul, name) do
-      %Exredis.Config.Config{
-        host: redis[:host],
-        port: String.to_integer(redis[:port]),
-        db: String.to_integer(redis[:database]),
-        password: redis[:password] || "",
-        reconnect: :no_reconnect,
-        max_queue: :infinity,
-        behaviour: :drop
-      }
+  defp connection_params(:redis, redis, name) do
+    %Exredis.Config.Config{
+      host: redis[:host],
+      port: String.to_integer(redis[:port]),
+      db: String.to_integer(redis[:database]),
+      password: redis[:password] || "",
+      reconnect: @reconnect_sleep,
+      max_queue: :infinity,
+      behaviour: :drop
+    }
+  end
+
+  if Code.ensure_compiled?(Consul.Kv) do
+    defp connection_params(:consul, consul, name) do
+      with redis <- Peluquero.Utils.consul(consul, name) do
+        %Exredis.Config.Config{
+          host: redis[:host],
+          port: String.to_integer(redis[:port]),
+          db: String.to_integer(redis[:database]),
+          password: redis[:password] || "",
+          reconnect: @reconnect_sleep,
+          max_queue: :infinity,
+          behaviour: :drop
+        }
+      end
     end
   end
 end
