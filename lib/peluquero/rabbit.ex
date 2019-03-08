@@ -7,7 +7,6 @@ defmodule Peluquero.Rabbit do
               opts: [],
               consul: nil,
               rabbit: nil,
-              redis: nil,
               suckers: [],
               spitters: [],
               kisser: nil
