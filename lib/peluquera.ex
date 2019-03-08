@@ -64,5 +64,4 @@ defmodule Peluquera do
   def handle_cast(:suicide, _state) do
     raise("❤ planned crash to reinit rabbits")
   end
-
 end

@@ -58,7 +58,6 @@ config :peluquero, :peluquerias,
         shaved: [
           queue: "direct.shaved-queue",
           routing_key: "direct-routing-key",
-          x_max_length: 10_000,
           durable: false
         ]
       ],
@@ -72,8 +71,9 @@ config :peluquero, :peluquerias,
     ]
   ]
 
-config :peluquero, :peinados, []
-#   eventory: [consul: "configuration/macroservices_dev/redis"]
-# ]
+config :peluquero, :peinados,
+  no1: [
+    redis: [database: "0", host: "127.0.0.1", port: "6379"]
+  ]
 
 config :peluquero, :pool, actors: [size: 100, max_overflow: 200]

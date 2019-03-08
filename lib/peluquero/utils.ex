@@ -63,46 +63,48 @@ defmodule Peluquero.Utils do
 
   ##############################################################################
 
-  def consul(root, path) when is_list(path), do: consul(root, Enum.join(path, @joiner))
-  def consul(root, path) when is_atom(path), do: consul(root, Atom.to_string(path))
+  if Code.ensure_compiled?(Consul.Kv) do
+    def consul(root, path) when is_list(path), do: consul(root, Enum.join(path, @joiner))
+    def consul(root, path) when is_atom(path), do: consul(root, Atom.to_string(path))
 
-  def consul(root, path) when is_binary(path) do
-    path =
-      [root, path]
-      |> Enum.join(@joiner)
-      |> String.trim_trailing(@joiner)
+    def consul(root, path) when is_binary(path) do
+      path =
+        [root, path]
+        |> Enum.join(@joiner)
+        |> String.trim_trailing(@joiner)
 
-    size = String.length(path)
+      size = String.length(path)
 
-    case apply(Consul.Kv, :keys, [path]) do
-      {:ok, %HTTPoison.Response{body: keys}} when is_list(keys) ->
-        keys
-        |> Enum.map(fn <<_::binary-size(size), @joiner::binary, key::binary>> -> key end)
-        |> Enum.filter(&(&1 != ""))
-        |> Enum.map(fn key ->
-          case Peluquero.Utils.consul_key_type(key) do
-            {:nested, _, _} ->
-              nil
+      case apply(Consul.Kv, :keys, [path]) do
+        {:ok, %HTTPoison.Response{body: keys}} when is_list(keys) ->
+          keys
+          |> Enum.map(fn <<_::binary-size(size), @joiner::binary, key::binary>> -> key end)
+          |> Enum.filter(&(&1 != ""))
+          |> Enum.map(fn key ->
+            case Peluquero.Utils.consul_key_type(key) do
+              {:nested, _, _} ->
+                nil
 
-            {:plain, :bag, rest} ->
-              {String.to_atom(rest), consul(path, key)}
+              {:plain, :bag, rest} ->
+                {String.to_atom(rest), consul(path, key)}
 
-            {:plain, :item, _} ->
-              with %HTTPoison.Response{body: [%{"Value" => value}]} <-
-                     apply(Consul.Kv, :fetch!, ["#{path}#{@joiner}#{key}"]),
-                   do: {String.to_atom(key), value}
-          end
-        end)
-        |> Enum.filter(&(not is_nil(&1)))
-        |> Enum.into([])
+              {:plain, :item, _} ->
+                with %HTTPoison.Response{body: [%{"Value" => value}]} <-
+                       apply(Consul.Kv, :fetch!, ["#{path}#{@joiner}#{key}"]),
+                     do: {String.to_atom(key), value}
+            end
+          end)
+          |> Enum.filter(&(not is_nil(&1)))
+          |> Enum.into([])
 
-      {:error, %HTTPoison.Error{id: _, reason: :econnrefused}} ->
-        Logger.error("Connection to consul refused for path [#{path}], check settings")
-        []
+        {:error, %HTTPoison.Error{id: _, reason: :econnrefused}} ->
+          Logger.error("Connection to consul refused for path [#{path}], check settings")
+          []
 
-      any ->
-        Logger.error("Unexpected error while connecting to consul: [#{inspect(any)}]")
-        []
+        any ->
+          Logger.error("Unexpected error while connecting to consul: [#{inspect(any)}]")
+          []
+      end
     end
   end
 
