@@ -53,6 +53,7 @@ defmodule Peluquero.Rabbit do
   @auto_delete false
   @exchange "amq.fanout"
   @queue "peluquero"
+  @publish_options [mandatory: true]
 
   @doc "Shuts the server down"
   def shutdown(name), do: GenServer.cast(fqname(name), :shutdown)
@@ -159,7 +160,8 @@ defmodule Peluquero.Rabbit do
       "[✂] publish directly to queue: #{inspect([queue, exchange, payload, state.kisser])}"
     end)
 
-    with {:error, reason} <- Basic.publish(state.kisser, exchange, routing_key, payload) do
+    with {:error, reason} <-
+           Basic.publish(state.kisser, exchange, routing_key, payload, @publish_options) do
       Logger.warn(fn ->
         "⚑ error publishing #{inspect(payload)} to #{queue}(#{exchange}), reason: #{reason}"
       end)
@@ -175,7 +177,7 @@ defmodule Peluquero.Rabbit do
     Enum.each(state.spitters, fn {channel, queue, exchange} ->
       Logger.debug(fn -> "[✂] publish: #{inspect([channel, queue, exchange, state])}" end)
       routing_key = state.opts[:destinations][String.to_existing_atom(exchange)][:routing_key]
-      Basic.publish(channel, exchange, routing_key, payload)
+      Basic.publish(channel, exchange, routing_key, payload, @publish_options)
     end)
 
     {:noreply, state}
