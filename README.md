@@ -1,4 +1,6 @@
-# ![Peluquero’s LOGO](/documentation/logo-69x60.png?raw=true)   Peluquero
+# ¡NB! This package is retired! Please use [`broadway`](https://hexdocs.pm/broadway/) instead.
+
+## ![Peluquero’s LOGO](/documentation/logo-69x60.png?raw=true)   Peluquero
 
 [![CircleCI](https://circleci.com/gh/am-kantox/peluquero.svg?style=svg)](https://circleci.com/gh/am-kantox/peluquero)   **RabbitMQ middleware to plug into exchange chain to transform data**
 
