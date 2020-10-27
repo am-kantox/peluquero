@@ -4,7 +4,7 @@ defmodule Peluquero.Mixfile do
 
   @app :peluquero
   # @app_name "Peluquero"
-  @version "0.99.32"
+  @version "0.99.33"
 
   def project do
     [

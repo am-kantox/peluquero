@@ -91,14 +91,14 @@ defmodule Peluquero.Peluqueria do
         worker_module: Peluquero.Actor
       )
 
+    name_prefix =
+      opts[:name]
+      |> to_string()
+      |> Macro.camelize()
+
     rabbits =
       Enum.map(1..(opts[:rabbits] || @rabbits), fn idx ->
-        name =
-          opts[:name]
-          |> to_string()
-          |> Macro.camelize()
-          |> Module.concat("Worker#{idx}")
-
+        name = Module.concat(name_prefix, "Worker#{idx}")
         name = fqname(Peluquero.Rabbit, name)
 
         worker(
@@ -117,9 +117,15 @@ defmodule Peluquero.Peluqueria do
 
     children = [
       worker(Peluquero.Peluqueria.Chairs, [
-        [name: opts[:name], scissors: opts[:scissors] || @scissors]
+        [
+          name: fqname(Peluquero.Peluqueria.Chairs, name_prefix),
+          scissors: opts[:scissors] || @scissors
+        ]
       ])
-      | [:poolboy.child_spec(actor(opts), pool_actor, name: opts[:name]) | rabbits]
+      | [
+          :poolboy.child_spec(actor(opts), pool_actor, name: name_prefix)
+          | rabbits
+        ]
     ]
 
     supervise(children, strategy: :one_for_one)
@@ -183,7 +189,7 @@ defmodule Peluquero.Peluqueria do
 
   defp publisher(name, :random) do
     case publishers(name) do
-      [] -> raise(Peluquero.Errors.UnknownTarget, target: name, reason: :notfound)
+      [] -> nil
       list when is_list(list) -> Enum.random(list)
     end
   end
@@ -240,12 +246,21 @@ defmodule Peluquero.Peluqueria do
   # @doc "Publishes a new message to publisher specified by name"
   @spec publish!(nil | binary(), any()) :: :ok
   def publish!(name \\ nil, payload) do
-    Peluquero.Rabbit.publish!(publisher(name), payload)
+    case publisher(name) do
+      nil -> :ok
+      publisher_name -> Peluquero.Rabbit.publish!(publisher_name, payload)
+    end
   end
 
   @doc "Publishes a new message to publisher specified by name, queue and exchange"
   @spec publish!(nil | binary(), binary(), binary(), any(), binary()) :: :ok
   def publish!(name, queue, exchange, payload, routing_key \\ "") do
-    Peluquero.Rabbit.publish!(publisher(name), queue, exchange, payload, routing_key)
+    case publisher(name) do
+      nil ->
+        :ok
+
+      publisher_name ->
+        Peluquero.Rabbit.publish!(publisher_name, queue, exchange, payload, routing_key)
+    end
   end
 end
