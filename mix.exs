@@ -4,7 +4,7 @@ defmodule Peluquero.Mixfile do
 
   @app :peluquero
   # @app_name "Peluquero"
-  @version "0.99.21"
+  @version "0.99.30"
 
   def project do
     [
@@ -32,9 +32,7 @@ defmodule Peluquero.Mixfile do
   defp deps do
     [
       {:gen_stage, "~> 0.14"},
-      {:rabbit_common, "~> 3.7.11"},
-      {:amqp_client, "~> 3.7.11"},
-      {:amqp, "~> 1.1.1"},
+      {:amqp, "~> 1.2"},
       {:exredis, "~> 0.2"},
       {:poolboy, "~> 1.5"},
       {:httpoison, "~> 0.11 or ~> 1.2"},

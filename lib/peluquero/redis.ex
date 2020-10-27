@@ -83,7 +83,7 @@ defmodule Peluquero.Redis do
 
   ##############################################################################
 
-  defp connection_params(:redis, redis, name) do
+  defp connection_params(:redis, redis, _name) do
     %Exredis.Config.Config{
       host: redis[:host],
       port: String.to_integer(redis[:port]),

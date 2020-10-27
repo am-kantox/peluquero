@@ -39,6 +39,9 @@ defmodule Peluquero.Actor do
   @doc false
   def handle_info({:DOWN, _ref, :process, _pid, :normal}, state), do: {:noreply, state}
 
+  @doc false
+  def handle_info({:DOWN, _ref, :process, _pid, :shutdown}, state), do: {:noreply, state}
+
   ##############################################################################
 
   # GenServer.cast

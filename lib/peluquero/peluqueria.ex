@@ -82,7 +82,7 @@ defmodule Peluquero.Peluqueria do
   @doc false
   def init(opts) do
     pool =
-      Keyword.merge([actors: [size: 5, max_overflow: 10], type: :local], opts[:pool] || @pool)
+      Keyword.merge([actors: [size: 25, max_overflow: 50], type: :local], opts[:pool] || @pool)
 
     pool_actor =
       Keyword.merge(
