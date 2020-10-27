@@ -1,8 +1,8 @@
 defmodule Peluquero.Namer do
   @moduledoc false
   defmacro __using__(opts) do
-    quote bind_quoted: [prefix: opts[:module]] do
-      @module_prefix prefix
+    quote do
+      @module_prefix unquote(opts[:module])
 
       @spec fqname(atom(), binary() | atom() | list() | nil) :: atom()
       @doc false
