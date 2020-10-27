@@ -117,7 +117,10 @@ defmodule Peluquero.Peluqueria do
 
     children = [
       worker(Peluquero.Peluqueria.Chairs, [
-        [name: opts[:name], scissors: opts[:scissors] || @scissors]
+        [
+          name: fqname(Peluquero.Peluqueria.Chairs, opts[:name]),
+          scissors: opts[:scissors] || @scissors
+        ]
       ])
       | [:poolboy.child_spec(actor(opts), pool_actor, name: opts[:name]) | rabbits]
     ]
