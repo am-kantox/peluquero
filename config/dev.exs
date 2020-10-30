@@ -38,7 +38,7 @@ config :peluquero, :peluquerias,
   ],
   shaved: [
     scissors: [],
-    rabbits: 42,
+    rabbits: 2,
     rabbit: [
       host: "localhost",
       password: "guest",

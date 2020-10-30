@@ -34,9 +34,7 @@ defmodule Peluquera do
 
     redises = spec_for_peinado({"Procurator", peinados})
 
-    opts = [strategy: :one_for_one, name: fqname(args)]
-
-    Supervisor.init([redises | amqps], opts)
+    Supervisor.init([redises | amqps], strategy: :one_for_one)
   end
 
   def suicide, do: GenServer.cast(__MODULE__, :suicide)

@@ -2,11 +2,11 @@ defmodule Peluquero.Namer do
   @moduledoc false
   defmacro __using__(opts) do
     quote do
-      @module_prefix unquote(opts[:module])
+      @module_prefix unquote(opts[:module]) || __MODULE__
 
       @spec fqname(atom(), binary() | atom() | list() | nil) :: atom()
       @doc false
-      def fqname(module \\ @module_prefix || __MODULE__, suffix)
+      def fqname(module \\ @module_prefix, suffix)
       @doc false
       def fqname(module, nil), do: module
       @doc false

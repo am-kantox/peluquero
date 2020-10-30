@@ -162,7 +162,6 @@ defmodule Peluquero.Peluqueria do
   defp actor(name) when is_atom(name) or is_binary(name), do: fqname(Peluquero.Actor, trim(name))
 
   defp publishers(name, full \\ false)
-  defp publishers(name, full), do: []
 
   defp publishers(name, full) do
     Peluquera

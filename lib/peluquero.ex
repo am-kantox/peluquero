@@ -96,7 +96,7 @@ defmodule Peluquero do
   use Application
 
   @doc false
-  @spec start(:permanent | :transient | :temporary, start_args :: term) ::
+  @spec start(:normal | {:failover, atom()} | {:takeover, atom()}, start_args :: term) ::
           {:ok, pid}
           | {:ok, pid, term}
           | {:error, reason :: term}
