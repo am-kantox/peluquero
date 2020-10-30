@@ -22,8 +22,6 @@ defmodule Peluquero.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :amqp],
-      # [name: Application]}
       mod: {Peluquero, []}
     ]
   end
@@ -40,6 +38,7 @@ defmodule Peluquero.Mixfile do
       {:jason, "~> 1.0"},
       {:credo, "~> 1.0", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
+      {:earmark, "~> 1.0", only: :dev},
       {:ex_doc, "~> 0.11", only: :dev},
       {:mock, "~> 0.3", only: :test},
       {:stream_data, "~> 0.4", only: :test}
