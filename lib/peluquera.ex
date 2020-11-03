@@ -19,7 +19,7 @@ defmodule Peluquera do
   def init(args) do
     peluquerias = Application.get_env(:peluquero, :peluquerias, [])
     peinados = Application.get_env(:peluquero, :peinados, [])
-    rabbit = Application.get_env(:peluquero, :rabbit, [])
+    rabbit = Application.get_env(:peluquero, :rabbit, nil)
 
     Logger.warn(fn ->
       "✂ Peluquero started:\n" <>
@@ -30,7 +30,6 @@ defmodule Peluquera do
 
     amqps =
       peluquerias
-      |> Enum.map(&add_rabbit_conf_to_peluqueria(rabbit, &1))
       |> Enum.map(&spec_for_peluqueria/1)
       |> case do
         [] -> [{Peluquero.Peluqueria, []}]
@@ -45,11 +44,6 @@ defmodule Peluquera do
   def suicide, do: GenServer.cast(__MODULE__, :suicide)
 
   ##############################################################################
-
-  defp add_rabbit_conf_to_peluqueria([], {exchg, conf}), do: {exchg, conf}
-
-  defp add_rabbit_conf_to_peluqueria(rabbit, {exchg, conf}),
-    do: {exchg, Keyword.merge(conf, rabbit: rabbit)}
 
   defp spec_for_peluqueria({name, settings}) do
     %{
