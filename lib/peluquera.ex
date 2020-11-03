@@ -24,7 +24,7 @@ defmodule Peluquera do
     Logger.warn(fn ->
       "✂ Peluquero started:\n" <>
         "   — peluquerias: #{inspect(peluquerias)}.\n" <>
-        "   — rabbit: #{inspect(rabbit)}.\n" <>
+        "   — default rabbit: #{inspect(rabbit)}.\n" <>
         "   — peinados: #{inspect(peinados)}.\n" <> "   — args: #{inspect(args)}.\n\n"
     end)
 
