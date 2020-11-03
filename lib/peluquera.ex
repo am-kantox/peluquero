@@ -19,15 +19,19 @@ defmodule Peluquera do
   def init(args) do
     peluquerias = Application.get_env(:peluquero, :peluquerias, [])
     peinados = Application.get_env(:peluquero, :peinados, [])
+    rabbit = Application.get_env(:peluquero, :rabbit, nil)
 
     Logger.warn(fn ->
       "✂ Peluquero started:\n" <>
         "   — peluquerias: #{inspect(peluquerias)}.\n" <>
+        "   — default rabbit: #{inspect(rabbit)}.\n" <>
         "   — peinados: #{inspect(peinados)}.\n" <> "   — args: #{inspect(args)}.\n\n"
     end)
 
     amqps =
-      case Enum.map(peluquerias, &spec_for_peluqueria/1) do
+      peluquerias
+      |> Enum.map(&spec_for_peluqueria/1)
+      |> case do
         [] -> [{Peluquero.Peluqueria, []}]
         many -> many
       end
